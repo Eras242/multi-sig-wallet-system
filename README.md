@@ -1,11 +1,12 @@
 # EVM compatible Multi-Signature Wallet System [ WIP ]
+## Overview
+![MultiSig Wallet Header](https://github.com/Eras242/multi-sig-wallet-system/blob/main/Image.png
+)
+
 
 [![Smart Contract](https://badgen.net/badge/smart-contract/Solidity/orange)](https://soliditylang.org/) 
 
 
-## Overview
-![MultiSig Wallet Header](https://github.com/Eras242/multi-sig-wallet-system/blob/main/Image.png
-)
 
 The Multi-Signature Wallet System consists of three main contracts designed to facilitate secure, collaborative management of assets and transactions among a group of designated owners. This system is written in solidity and designed to be deployed on any EVM compatible chain.
 
