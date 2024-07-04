@@ -5,6 +5,7 @@
 
 
 [![Smart Contract](https://badgen.net/badge/smart-contract/Solidity/orange)](https://soliditylang.org/) 
+[![MIT License](https://badgen.net/static/license/MIT/blue)](https://opensource.org/license/mit)
 
 
 
