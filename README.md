@@ -53,8 +53,8 @@ To deploy and interact with the MultiSig Wallet system:
 
 ## Documentation and Support
 
-For detailed API documentation, contract deployment guides, and support, refer to the Forge Foundry documentation or visit the project repository.
+For detailed API documentation, contract deployment guides, and support, refer to the Forge Foundry documentation.
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
 
