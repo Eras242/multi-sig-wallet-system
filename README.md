@@ -1,4 +1,4 @@
-# EVM Multi-Signature Wallet System
+# EVM compatible Multi-Signature Wallet System [ WIP ]
 
 ## Overview
 ![MultiSig Wallet Header](https://github.com/Eras242/multi-sig-wallet-system/blob/main/Image.png
