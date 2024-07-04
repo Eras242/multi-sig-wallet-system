@@ -1,8 +1,10 @@
 # Multi-Signature Wallet Project Documentation
 
 ## Overview
+![MultiSig Wallet Header](https://github.com/Eras242/multi-sig-wallet-system/blob/main/Image.png
+)
 
-The Multi-Signature Wallet System consists of three main contracts designed to facilitate secure, collaborative management of assets and transactions among a group of designated owners. This system leverages Ethereum's smart contract capabilities to enforce multi-signature approval requirements for executing transactions and making operational changes to the wallet.
+The Multi-Signature Wallet System consists of three main contracts designed to facilitate secure, collaborative management of assets and transactions among a group of designated owners. This system is written in solidity and designed to be deployed on any EVM compatable chain.
 
 The project consists of three main contracts:
 - `MultiSigFactory`: Facilitates the creation of a Multi-Signature Wallet system by deploying both a `MultiSigHandler` and a `MultiSigWallet` contract simultaniously.
