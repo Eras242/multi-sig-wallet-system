@@ -1,5 +1,8 @@
 # EVM compatible Multi-Signature Wallet System [ WIP ]
 
+[![Smart Contract](https://badgen.net/badge/smart-contract/Solidity/orange)](https://soliditylang.org/) 
+
+
 ## Overview
 ![MultiSig Wallet Header](https://github.com/Eras242/multi-sig-wallet-system/blob/main/Image.png
 )
