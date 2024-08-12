@@ -1,8 +1,15 @@
-# Multi-Signature Wallet Project Documentation
-
+# EVM compatible Multi-Signature Wallet System [ WIP ]
 ## Overview
+![MultiSig Wallet Header](https://github.com/Eras242/multi-sig-wallet-system/blob/main/Image.png
+)
 
-The Multi-Signature Wallet System consists of three main contracts designed to facilitate secure, collaborative management of assets and transactions among a group of designated owners. This system leverages Ethereum's smart contract capabilities to enforce multi-signature approval requirements for executing transactions and making operational changes to the wallet.
+
+[![Smart Contract](https://badgen.net/badge/smart-contract/Solidity/orange)](https://soliditylang.org/) 
+[![MIT License](https://badgen.net/static/license/MIT/blue)](https://opensource.org/license/mit)
+
+
+
+The Multi-Signature Wallet System consists of three main contracts designed to facilitate secure, collaborative management of assets and transactions among a group of designated owners. This system is written in solidity and designed to be deployed on any EVM compatible chain.
 
 The project consists of three main contracts:
 - `MultiSigFactory`: Facilitates the creation of a Multi-Signature Wallet system by deploying both a `MultiSigHandler` and a `MultiSigWallet` contract simultaniously.
@@ -35,7 +42,7 @@ The `MultiSigHandler` contract manages proposals and operational changes for the
 
 ## Development Environment
 
-This project was developed using the Forge Foundry smart contract development framework, ensuring robust testing, deployment, and integration capabilities for Ethereum-based applications.
+This project was developed using the Forge Foundry smart contract development framework.
 
 ## Getting Started
 
@@ -51,8 +58,8 @@ To deploy and interact with the MultiSig Wallet system:
 
 ## Documentation and Support
 
-For detailed API documentation, contract deployment guides, and support, refer to the Forge Foundry documentation or visit the project repository.
+For detailed API documentation, contract deployment guides, and support, refer to the Forge Foundry documentation.
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
 
