@@ -127,7 +127,15 @@ contract MultiSigHandlerTest is Test {
         nullOwners.push(david);
 
         vm.expectRevert(MultiSigHandler.MultiSigHandler__ZeroAddress.selector);
-        MultiSigHandler handler = deployer.run(duplicateOwners, required, requiredMinimum);
+        MultiSigHandler handler = deployer.run(nullOwners, required, requiredMinimum);
+    }
+
+    function testHandlerCannotHaveInvalidMinimumNumberOfVotes() public {
+        vm.expectRevert(MultiSigHandler.MultiSigHandler__InvalidNumberOfMnimumRequiredVotes.selector);
+        uint256 required = 3;
+        uint256 requiredMinimum = 0;
+
+        MultiSigHandler handler = deployer.run(owners, required, requiredMinimum);
     }
 
     ///////////////////////////////////
@@ -296,6 +304,8 @@ contract MultiSigHandlerTest is Test {
         public
         proposalCreatedWithExpiry(200)
     {
+
+        // No expiration check in execute function
         vm.prank(jack);
         handler.vote(0);
         vm.prank(alice);
@@ -355,6 +365,84 @@ contract MultiSigHandlerTest is Test {
         handler.createProposal(MultiSigHandler.HandleType.REMOVE_OWNER, notOwner, 0, "", 0);
     }
 
+    function testRemoveOwnerCheckFailsIfBelowMinimumThreshold() public {
+        vm.prank(bob);
+        vm.expectRevert(MultiSigHandler.MultiSigHandler__ApprovalsBelowMinimumThreshold.selector);
+        handler.createProposal(MultiSigHandler.HandleType.REMOVE_OWNER, michael, 0, "", 0);
+    }
+
+    function testRemoveOwnerSuccessfullyUpdatesRequiredHandlerVotes() public {
+        vm.prank(bob);
+        handler.createProposal(MultiSigHandler.HandleType.CHANGE_REQUIRED_APPROVALS, address(0), 5, "", 0);
+
+        vm.prank(jack);
+        handler.vote(0);
+        vm.prank(alice);
+        handler.vote(0);
+        vm.prank(michael);
+        handler.vote(0);
+        vm.prank(bob);
+        handler.executeProposal(0);
+
+        vm.prank(bob);
+        handler.createProposal(MultiSigHandler.HandleType.REMOVE_OWNER, michael, 0, "", 0);
+
+        vm.prank(jack);
+        handler.vote(1);
+        vm.prank(alice);
+        handler.vote(1);
+        vm.prank(michael);
+        handler.vote(1);
+        vm.prank(david);
+        handler.vote(1);
+        vm.prank(bob);
+        handler.vote(1);
+
+        vm.prank(bob);
+        handler.executeProposal(1);
+
+        uint256 expectedRequiredHandlerVotes = 4;
+        uint256 requiredHandlerVotes = handler.getRequiredVotes();
+
+        assertEq(expectedRequiredHandlerVotes, requiredHandlerVotes);
+    }
+
+    function testRemoveOwnerSuccessfullyUpdatesOwnerStatus() public {
+        vm.prank(bob);
+        handler.createProposal(MultiSigHandler.HandleType.CHANGE_REQUIRED_APPROVALS, address(0), 5, "", 0);
+
+        vm.prank(jack);
+        handler.vote(0);
+        vm.prank(alice);
+        handler.vote(0);
+        vm.prank(michael);
+        handler.vote(0);
+        vm.prank(bob);
+        handler.executeProposal(0);
+
+        vm.prank(bob);
+        handler.createProposal(MultiSigHandler.HandleType.REMOVE_OWNER, michael, 0, "", 0);
+
+        vm.prank(jack);
+        handler.vote(1);
+        vm.prank(alice);
+        handler.vote(1);
+        vm.prank(michael);
+        handler.vote(1);
+        vm.prank(david);
+        handler.vote(1);
+        vm.prank(bob);
+        handler.vote(1);
+
+        vm.prank(bob);
+        handler.executeProposal(1);
+
+        bool michaelExpectedOwnerStatus = false;
+        bool michaelOwnerStatus = handler.getOwnerStatus(michael);
+
+        assertEq(michaelExpectedOwnerStatus, michaelOwnerStatus);
+    }
+
     // changeRequiredApprovalsCheck
 
     function testChangeRequiredApprovalsCheckFailsIfGreaterThanTotalOwners() public {
@@ -364,13 +452,6 @@ contract MultiSigHandlerTest is Test {
             MultiSigHandler.MultiSigHandler__RequiredApprovalsCannotBeGreaterThanTotalNumberOfOwners.selector
         );
         handler.createProposal(MultiSigHandler.HandleType.CHANGE_REQUIRED_APPROVALS, address(0), 10, "", 0);
-    }
-
-    function testChangeRequiredApprovalsCheckFailsIfZero() public {
-        vm.prank(bob);
-
-        vm.expectRevert(MultiSigHandler.MultiSigHandler__InvalidRequiredApprovals.selector);
-        handler.createProposal(MultiSigHandler.HandleType.CHANGE_REQUIRED_APPROVALS, address(0), 0, "", 0);
     }
 
     function testChangeRequiredApprovalsCheckFailsIfUnchanged() public {

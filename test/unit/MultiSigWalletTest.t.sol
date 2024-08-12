@@ -134,7 +134,7 @@ contract MultiSigWalletTest is Test {
         nullOwners.push(david);
 
         vm.expectRevert(MultiSigWallet.MultiSigWallet__ZeroAddress.selector);
-        MultiSigWallet wallet = deployer.run(duplicateOwners, required, requiredMinimum, address(0));
+        MultiSigWallet wallet = deployer.run(nullOwners, required, requiredMinimum, address(123));
     }
 
     ///////////////////////////////////

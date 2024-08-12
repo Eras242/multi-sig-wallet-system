@@ -14,7 +14,8 @@ interface IMultiSigWallet {
     function getTransaction(uint256 _transactionId) external;
     function getTransactionApprovals(uint256 _transactionId) external returns (uint256);
     function getTransactionStatus(uint256 _transactionId) external returns (uint256);
-    function getTransactionsLength() external returns (uint256);
+    function getTransactionsLength() external view returns (uint256);
+    function getMinimumApprovals() external view returns (uint256);
     function getName() external returns (string memory);
     function isOwner(address _user) external returns (bool);
     function removeOwner(address _owner) external;

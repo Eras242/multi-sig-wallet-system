@@ -6,13 +6,16 @@ import {DeployMultiSigHandler} from "../../script/DeployMultiSigHandler.s.sol";
 import {DeployMultiSigWallet} from "../../script/DeployMultiSigWallet.s.sol";
 import {MultiSigHandler} from "../../src/MultiSigHandler.sol";
 import {MultiSigWallet} from "../../src/MultiSigWallet.sol";
+import {MultiSigFactory} from "../../src/MultiSigFactory.sol";
+import {DeployMultiSigFactory} from "../../script/DeployMultiSigFactory.s.sol";
 
 contract MultiSigHandlerIntegrationTest is Test {
     MultiSigHandler handler;
     MultiSigWallet wallet;
 
-    DeployMultiSigHandler deployer;
-    DeployMultiSigWallet walletDeployer;
+    DeployMultiSigFactory deployer;
+    // DeployMultiSigHandler deployer;
+    // DeployMultiSigWallet walletDeployer;
 
     address bob = makeAddr("bob");
     address alice = makeAddr("alice");
@@ -27,8 +30,8 @@ contract MultiSigHandlerIntegrationTest is Test {
     string name = "New MultiSig Wallet";
 
     function setUp() public {
-        deployer = new DeployMultiSigHandler();
-        walletDeployer = new DeployMultiSigWallet();
+        deployer = new DeployMultiSigFactory();
+        MultiSigFactory factory = deployer.run();
 
         owners.push(bob);
         owners.push(alice);
@@ -36,10 +39,19 @@ contract MultiSigHandlerIntegrationTest is Test {
         owners.push(jack);
         owners.push(david);
 
-        handler = deployer.run(owners, 3, 3);
-        wallet = walletDeployer.run(owners, 3, 3, address(handler));
+        (wallet, handler) = factory.createMultiSigWalletAndHandler(owners, 3, 4, 4, name);
+    }
 
-        handler.initializeHandler(address(wallet));
+    modifier proposalMeetsRequiredVotes() {
+        vm.prank(david);
+        handler.vote(0);
+        vm.prank(jack);
+        handler.vote(0);
+        vm.prank(michael);
+        handler.vote(0);
+        vm.prank(bob);
+        handler.vote(0);
+        _;
     }
 
     /////////////////////////////////////
@@ -50,18 +62,20 @@ contract MultiSigHandlerIntegrationTest is Test {
         vm.prank(bob);
         handler.createProposal(MultiSigHandler.HandleType.ADD_OWNER, john, 0, "", 0);
 
-        vm.prank(alice);
+        vm.prank(david);
         handler.vote(0);
         vm.prank(jack);
         handler.vote(0);
         vm.prank(michael);
+        handler.vote(0);
+        vm.prank(bob);
         handler.vote(0);
 
         vm.prank(bob);
         handler.executeProposal(0);
 
         uint256 expectedOwnersLength = 6;
-        uint256 expectedRequiredApprovals = 4;
+        uint256 expectedRequiredApprovals = 5;
         bool expectedJohnOwnershipStatus = true;
 
         uint256 ownersLength = wallet.getOwnersLength();
@@ -86,6 +100,8 @@ contract MultiSigHandlerIntegrationTest is Test {
         vm.prank(jack);
         handler.vote(0);
         vm.prank(michael);
+        handler.vote(0);
+        vm.prank(bob);
         handler.vote(0);
 
         vm.prank(bob);
@@ -114,16 +130,6 @@ contract MultiSigHandlerIntegrationTest is Test {
         _;
     }
 
-    modifier proposalMeetsRequiredVotes() {
-        vm.prank(david);
-        handler.vote(0);
-        vm.prank(jack);
-        handler.vote(0);
-        vm.prank(michael);
-        handler.vote(0);
-        _;
-    }
-
     function testHandlerCanSucessfullyIncreaseRequiredWalletApprovals()
         public
         approvalProposalSubmitted(5)
@@ -140,22 +146,26 @@ contract MultiSigHandlerIntegrationTest is Test {
 
     function testHandlerCanSucessfullyDecreaseRequiredWalletApprovals()
         public
-        approvalProposalSubmitted(2)
+        approvalProposalSubmitted(3)
         proposalMeetsRequiredVotes
     {
         vm.prank(bob);
         handler.executeProposal(0);
 
-        uint256 expectedRequiredApprovals = 2;
+        uint256 expectedRequiredApprovals = 3;
         uint256 requiredApprovals = wallet.getRequiredApprovals();
 
         assertEq(expectedRequiredApprovals, requiredApprovals);
     }
 
+    function testHandlerFailsIfDecreasingRequiredApprovalsIsBelowMinimumRequiredThreshold() public {}
+
     function testHandlerCanSucessfullyChangeWalletName() public {
         vm.prank(bob);
         handler.createProposal(MultiSigHandler.HandleType.CHANGE_NAME, address(0), 0, "New Updated Name", 0);
 
+        vm.prank(bob);
+        handler.vote(0);
         vm.prank(david);
         handler.vote(0);
         vm.prank(jack);

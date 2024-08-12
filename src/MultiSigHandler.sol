@@ -9,6 +9,7 @@ contract MultiSigHandler {
     error MultiSigHandler__InvalidNumberOfRequiredVotes();
     error MultiSigHandler__InvalidNumberOfMnimumRequiredVotes();
     error MultiSigHandler__RequiredApprovalsCannotBeGreaterThanTotalNumberOfOwners();
+    error MultiSigHandler__ApprovalsBelowMinimumThreshold();
     error MultiSigHandler__InvalidRequiredApprovals();
     error MultiSigHandler__DuplicateOwner();
     error MultiSigHandler__ZeroAddress();
@@ -274,35 +275,54 @@ contract MultiSigHandler {
         s_latestProposal++;
 
         emit ProposalCreated(id, msg.sender);
-
     }
-
 
     /**
      * @notice Executes a proposal if it has met the required votes needed to execute.
      * @dev Reverts if the proposal status is not valid for execution or if the required conditions are not met.
      * @param _proposalId The ID of the proposal to execute.
      */
-
     function executeProposal(uint256 _proposalId) public onlyOwner initialized {
         Proposal storage proposal = proposals[_proposalId];
 
+        // Error Handling
         if (proposal.status != ProposalStatus.APPROVED) {
+            // Revert if Executed
             if (proposal.status == ProposalStatus.EXECUTED) revert MultiSigHandler__ProposalExecuted();
+
+            // Revert if Revoked
             if (proposal.status == ProposalStatus.REVOKED) revert MultiSigHandler__ProposalRevoked();
-            if (proposal.status == ProposalStatus.EXPIRED && proposal.ownersVoted.length < s_requiredVotes) revert MultiSigHandler__ProposalExpired();
+
+            // Revert if Expired with less than required votes
+            if (proposal.expiredBlock != 0) {
+                if (block.timestamp > proposal.expiredBlock && proposal.ownersVoted.length < s_requiredVotes) {
+                    proposal.status = ProposalStatus.EXPIRED;
+                    revert MultiSigHandler__ProposalExpired();
+                }
+            }
+            // Revert if Pending
             if (proposal.status == ProposalStatus.PENDING) revert MultiSigHandler__ProposalPending();
+
+            // Execution
         } else {
+            // ADD OWNER
             if (proposal.handle == HandleType.ADD_OWNER) {
                 s_multiSigWallet.addOwner(proposal.owner);
                 s_multiSigWallet.changeRequiredApprovals(s_multiSigWallet.getRequiredApprovals() + 1);
                 _manageHandlerOwners(proposal.handle, proposal.owner);
+
+                // REMOVE OWNER
             } else if (proposal.handle == HandleType.REMOVE_OWNER) {
                 s_multiSigWallet.removeOwner(proposal.owner);
                 s_multiSigWallet.changeRequiredApprovals(s_multiSigWallet.getRequiredApprovals() - 1);
                 _manageHandlerOwners(proposal.handle, proposal.owner);
+
+                // CHANGE REQUIRED APPROVALS
             } else if (proposal.handle == HandleType.CHANGE_REQUIRED_APPROVALS) {
                 s_multiSigWallet.changeRequiredApprovals(proposal.requiredApprovals);
+                s_requiredVotes = proposal.requiredApprovals;
+
+                // CHANGE NAME
             } else if (proposal.handle == HandleType.CHANGE_NAME) {
                 s_multiSigWallet.changeName(proposal.name);
             }
@@ -339,19 +359,26 @@ contract MultiSigHandler {
         if (!s_multiSigWallet.isOwner(_owner)) {
             revert MultiSigHandler__OwnerDoesNotExists();
         }
+
+        if ((s_multiSigWallet.getRequiredApprovals() - 1) < s_multiSigWallet.getMinimumApprovals()) {
+            revert MultiSigHandler__ApprovalsBelowMinimumThreshold();
+        }
     }
 
     function _changeRequiredApprovalsCheck(uint256 _requiredApprovals) internal {
+        // Not Greater than Total Owners
         if (_requiredApprovals > s_multiSigWallet.getOwnersLength()) {
             revert MultiSigHandler__RequiredApprovalsCannotBeGreaterThanTotalNumberOfOwners();
         }
 
-        if (_requiredApprovals <= 0) {
+        // Not current required approvals
+        if (_requiredApprovals == s_multiSigWallet.getRequiredApprovals()) {
             revert MultiSigHandler__InvalidRequiredApprovals();
         }
 
-        if (_requiredApprovals == s_multiSigWallet.getRequiredApprovals()) {
-            revert MultiSigHandler__InvalidRequiredApprovals();
+        // Not less than minimum approvals
+        if (_requiredApprovals < s_multiSigWallet.getMinimumApprovals()) {
+            revert MultiSigHandler__ApprovalsBelowMinimumThreshold();
         }
     }
 
@@ -376,5 +403,13 @@ contract MultiSigHandler {
 
     function getProposalStatus(uint256 _proposalId) public view returns (uint256) {
         return uint256(proposals[_proposalId].status);
+    }
+
+    function getRequiredVotes() public view returns (uint256) {
+        return s_requiredVotes;
+    }
+
+    function getOwnerStatus(address _owner) public view returns (bool) {
+        return s_isOwner[_owner];
     }
 }

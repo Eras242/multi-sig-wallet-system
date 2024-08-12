@@ -29,12 +29,11 @@ contract MultiSigFactoryTest is Test {
     }
 
     function testMultiSigFactoryCreatesWalletAndHandelerSuccessfully() public {
-        uint256 requiredMinimumApprovals = 3;
+        uint256 requiredMinimumConfirmations = 3;
         uint256 requiredInitialApprovals = 3;
-        uint256 requiredMinimumVotes = 3;
         uint256 requiredInitialVotes = 3;
         multiSigFactory.createMultiSigWalletAndHandler(
-            owners, requiredMinimumApprovals, requiredInitialApprovals, requiredMinimumVotes, requiredInitialVotes, name
+            owners, requiredMinimumConfirmations, requiredInitialApprovals, requiredInitialVotes, name
         );
     }
 }

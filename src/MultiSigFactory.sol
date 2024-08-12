@@ -32,9 +32,8 @@ contract MultiSigFactory {
      * @notice Creates a new MultiSigWallet and MultiSigHandler contract.
      * @dev This function deploys a MultiSigWallet and a MultiSigHandler, and initializes the handler with the address of the wallet.
      * @param _owners An array of addresses that will act as the owners of the wallet and handler.
-     * @param _requiredMinimumApprovals The minimum and immutable number of approvals required to execute a transaction in the MultiSigWallet.
+     * @param _requiredMinimumThreshold The minimum and immutable number of approvals required to execute a transaction in the MultiSigWallet.
      * @param _requiredInitialApprovals The initial number of approvals required to execute a transaction in the MultiSigWallet.
-     * @param _requiredMinimumVotes The minimum and immutable number of votes required to vote on a proposal in the MultiSigHandler.
      * @param _requiredInitialVotes The initial number of votes required to vote on a proposal in the MultiSigHandler.
      * @param _name A name identifier for the MultiSigWallet.
      * @return wallet The address of the newly created MultiSigWallet contract.
@@ -43,15 +42,14 @@ contract MultiSigFactory {
      */
     function createMultiSigWalletAndHandler(
         address[] calldata _owners,
-        uint256 _requiredMinimumApprovals,
+        uint256 _requiredMinimumThreshold,
         uint256 _requiredInitialApprovals,
-        uint256 _requiredMinimumVotes,
         uint256 _requiredInitialVotes,
         string calldata _name
     ) external returns (MultiSigWallet wallet, MultiSigHandler handler) {
-        handler = new MultiSigHandler(_owners, _requiredInitialVotes, _requiredMinimumVotes);
+        handler = new MultiSigHandler(_owners, _requiredInitialVotes, _requiredMinimumThreshold);
         wallet =
-            new MultiSigWallet(_owners, _requiredInitialApprovals, _requiredMinimumApprovals, _name, address(handler));
+            new MultiSigWallet(_owners, _requiredInitialApprovals, _requiredMinimumThreshold, _name, address(handler));
         handler.initializeHandler(address(wallet));
 
         emit MultiSigWalletAndHandlerCreated(msg.sender, address(wallet), address(handler));

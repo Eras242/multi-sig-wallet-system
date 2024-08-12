@@ -106,14 +106,14 @@ contract MultiSigWallet {
      * - Ensures that there are no duplicate owners and that no owner is a zero address.
      * @param _owners An array of addresses representing the initial owners of the wallet.
      * @param _requiredApprovals The number of approvals required to execute a transaction.
-     * @param _requiredMinimumApprovals The immutable minimum number of approvals needed to execute a transaction.
+     * @param _requiredMinimumThreshold The immutable minimum number of approvals needed to execute a transaction.
      * @param _name A string representing the name of the wallet.
      * @param _handler The address of the handler responsible for managing wallet operations.
      */
     constructor(
         address[] memory _owners,
         uint256 _requiredApprovals,
-        uint256 _requiredMinimumApprovals,
+        uint256 _requiredMinimumThreshold,
         string memory _name,
         address _handler
     ) {
@@ -122,14 +122,14 @@ contract MultiSigWallet {
         // Check if no owners provided
         if (ownersLength == 0) revert MultiSigWallet__NoInitialOwnersProvided();
 
-        // Check if _requiredMinimumApprovals is valid
-        if (_requiredMinimumApprovals > ownersLength || _requiredMinimumApprovals <= 0) {
+        // Check if _requiredMinimumThreshold is valid
+        if (_requiredMinimumThreshold > ownersLength || _requiredMinimumThreshold <= 0) {
             revert MultiSigWallet__InvalidMinimumApprovals();
         }
 
         // Check if _requiredApprovals is valid
         if (
-            _requiredApprovals < _requiredMinimumApprovals || _requiredApprovals > ownersLength
+            _requiredApprovals < _requiredMinimumThreshold || _requiredApprovals > ownersLength
                 || _requiredApprovals <= 0
         ) {
             revert MultiSigWallet__InvalidRequiredApprovals();
@@ -148,6 +148,7 @@ contract MultiSigWallet {
         s_handler = _handler;
         s_name = _name;
         s_required_approvals = _requiredApprovals;
+        MINIMUM_REQUIRED_APPROVALS = _requiredMinimumThreshold;
     }
 
     receive() external payable {
@@ -436,6 +437,10 @@ contract MultiSigWallet {
 
     function getRequiredApprovals() public view returns (uint256) {
         return s_required_approvals;
+    }
+
+    function getMinimumApprovals() external view returns (uint256) {
+        return MINIMUM_REQUIRED_APPROVALS;
     }
 
     function getTransactionStatus(uint256 _transactionId) public view returns (uint256) {
