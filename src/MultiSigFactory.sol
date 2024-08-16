@@ -40,6 +40,7 @@ contract MultiSigFactory {
      * @return handler The address of the newly created MultiSigHandler contract.
      * @notice Emits a `MultiSigWalletAndHandlerCreated` event upon successful creation of the contracts.
      */
+    
     function createMultiSigWalletAndHandler(
         address[] calldata _owners,
         uint256 _requiredMinimumThreshold,

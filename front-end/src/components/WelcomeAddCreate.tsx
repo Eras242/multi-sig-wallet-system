@@ -1,20 +1,28 @@
 "use client";
 import { useState } from "react";
-import { useSpring, animated } from "@react-spring/web";
+import { useTransition, animated } from "@react-spring/web";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-
+import { CreateWalletForm } from "./CreateWalletForm";
 import React from "react";
 import { Separator } from "./ui/separator";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
 export const WelcomeCreateAdd = () => {
+  const Container = ({ children }: { children: React.ReactNode }) => {
+    return (
+      <animated.div className="  absolute top-2/4 left-2/4 transform -translate-x-1/2  flex items-center justify-center flex-col px-8 py-8 gap-4 w-auto ">
+        {children}
+      </animated.div>
+    );
+  };
+
   const Welcome = () => {
     return (
-      <animated.div className="relative flex items-center justify-center flex-col px-8 py-8 gap-4 w-full ">
+      <Container>
         <h1 className="font-bold text-4xl "> Welcome </h1>
         <Separator className="w-80" />
-        <div className=" w-[800px] text-center mt-8">
+        <div className=" w-[800px] text-center mt-8 text-muted-foreground">
           <h2>
             Whether you're looking to create a new multisig wallet or manage an
             existing one, you've come to the right place. Start by setting up a
@@ -29,12 +37,12 @@ export const WelcomeCreateAdd = () => {
         >
           <p>Get Started</p>
         </Button>
-      </animated.div>
+      </Container>
     );
   };
   const GetStarted = () => {
     return (
-      <animated.div className="relative flex items-center justify-center flex-col px-8 py-8 gap-4 w-full">
+      <Container>
         <h2 className="font-bold text-2xl ">
           How would you like to get started?
         </h2>
@@ -56,58 +64,86 @@ export const WelcomeCreateAdd = () => {
             <p>Create a new Wallet</p>
           </Button>
         </div>
-      </animated.div>
+      </Container>
     );
   };
   const AddWallet = () => {
     return (
-      <animated.div className="relative flex items-center justify-center flex-col px-8 py-8 gap-4 w-full ">
-        <h2 className="font-bold text-2xl ">Access an existing wallet:</h2>
+      <Container>
+        <h2 className="font-bold text-2xl ">
+          Add and view an existing wallet:
+        </h2>
         <Separator className="w-80" />
         <Input className="w-[300px] h-[50px]" placeholder={"Wallet Address"} />
         <div className="flex gap-2">
-          <Button variant={"outline"}>
+          <Button
+            variant={"outline"}
+            className="flex gap-4"
+            onClick={() => setCurrentScreen(1)}
+          >
             {" "}
             <ArrowLeftOutlined />
             Back
           </Button>
           <Button variant={"outline"}>View Wallet</Button>
         </div>
-      </animated.div>
+      </Container>
     );
   };
   const CreateWallet = () => {
     return (
-      <animated.div className="relative flex items-center justify-center flex-col px-8 py-8 gap-4 w-full bg-green-200">
+      <Container>
         <h1>Create Wallet</h1>
-      </animated.div>
+        <Button
+          variant={"outline"}
+          className="flex gap-4"
+          onClick={() => setCurrentScreen(1)}
+        >
+          <CreateWalletForm />
+          <ArrowLeftOutlined />
+          Back
+        </Button>
+      </Container>
     );
   };
 
   const [currentScreen, setCurrentScreen] = useState(0);
 
-  const transitions = useSpring({
-    opacity: currentScreen === 0 ? 1 : 1,
-    transform: currentScreen === 0 ? "translateX(0%)" : "translateX(0%)",
-    from:
-      currentScreen === 0
-        ? { opacity: 1, transform: "translateX(0%)" }
-        : { opacity: 0, transform: "translateX(100%)" },
-    reset: true,
-    // key: currentScreen,
-  });
+  // const transitions = useSpring({
+  //   opacity: currentScreen === 0 ? 1 : 1,
+  //   from:
+  //     currentScreen === 0
+  //       ? { opacity: 1, transform: "translateX(0%)" }
+  //       : { opacity: 0, transform: "translateX(100%)" },
+  //   to: { opacity: 1, transform: "translateX(0%)" },
+
+  //   reset: true,
+  //   // key: currentScreen,
+  // });
 
   const screens = [
-    <Welcome key="welcome" />,
-    <GetStarted key="getStarted" />,
-    <AddWallet key="addWallet" />,
-    <CreateWallet key="createWallet" />,
+    { id: 0, component: <Welcome key="welcome" /> },
+    { id: 1, component: <GetStarted key="getStarted" /> },
+    { id: 2, component: <AddWallet key="addWallet" /> },
+    { id: 3, component: <CreateWallet key="createWallet" /> },
   ];
 
+  const transitions = useTransition(screens[currentScreen], {
+    from: { opacity: 0, transform: "translateX(100%)" },
+    enter: { opacity: 1, transform: "translateX(0%)" },
+    leave: { opacity: 0, transform: "translateX(-100%)" },
+    config: { tension: 220, friction: 30 },
+    reverse: true, // Makes the transition reverse when the screen changes
+    keys: currentScreen, // Helps to identify when a transition should occur based on screen change
+  });
+
   return (
-    <div className="flex items-center w-full overflow-hidden">
-      <animated.div style={transitions} key={currentScreen} className="w-full">
-        {screens[currentScreen]}
+    // <div className=" flex h-full w-full overflow-hidden bg-green-300">
+    <div className=" w-full self-center h-96 overflow-hidden ">
+      <animated.div style={{ ...transitions }} key={currentScreen}>
+        {transitions((style, item) => (
+          <animated.div style={style}>{item.component}</animated.div>
+        ))}
       </animated.div>
     </div>
   );
