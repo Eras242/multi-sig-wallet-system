@@ -10,11 +10,28 @@ import { WelcomeCreateAdd } from "@/components/WelcomeAddCreate";
 export default function Home() {
   return (
     <WagmiConnectionProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex h-screen w-full">
         <Sidebar />
-        {/* <Wallet /> */}
         <WelcomeCreateAdd />
+
+        {/* <Wallet /> */}
       </div>
     </WagmiConnectionProvider>
   );
+}
+
+{
+  /* <animated.div
+style={{ ...transitions }}
+key={currentScreen}
+className="bg-purple-300"
+> */
+}
+{
+  /* {transitions((style, item) => (
+<animated.div style={style}>{item.component}</animated.div>
+))} */
+}
+{
+  /* </animated.div> */
 }

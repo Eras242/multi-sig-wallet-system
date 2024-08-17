@@ -11,7 +11,7 @@ import { Input } from "./ui/input";
 export const WelcomeCreateAdd = () => {
   const Container = ({ children }: { children: React.ReactNode }) => {
     return (
-      <animated.div className="  absolute top-2/4 left-2/4 transform -translate-x-1/2  flex items-center justify-center flex-col px-8 py-8 gap-4 w-auto ">
+      <animated.div className="flex items-center justify-center flex-col px-8 py-8 gap-4 border-box">
         {children}
       </animated.div>
     );
@@ -47,7 +47,6 @@ export const WelcomeCreateAdd = () => {
           How would you like to get started?
         </h2>
         <Separator className="w-80" />
-        <div className=" w-[800px] text-center "></div>
         <div className="flex gap-4">
           <Button
             onClick={() => setCurrentScreen(2)}
@@ -93,13 +92,12 @@ export const WelcomeCreateAdd = () => {
   const CreateWallet = () => {
     return (
       <Container>
-        <h1>Create Wallet</h1>
+        <CreateWalletForm />
         <Button
           variant={"outline"}
           className="flex gap-4"
           onClick={() => setCurrentScreen(1)}
         >
-          <CreateWalletForm />
           <ArrowLeftOutlined />
           Back
         </Button>
@@ -109,18 +107,6 @@ export const WelcomeCreateAdd = () => {
 
   const [currentScreen, setCurrentScreen] = useState(0);
 
-  // const transitions = useSpring({
-  //   opacity: currentScreen === 0 ? 1 : 1,
-  //   from:
-  //     currentScreen === 0
-  //       ? { opacity: 1, transform: "translateX(0%)" }
-  //       : { opacity: 0, transform: "translateX(100%)" },
-  //   to: { opacity: 1, transform: "translateX(0%)" },
-
-  //   reset: true,
-  //   // key: currentScreen,
-  // });
-
   const screens = [
     { id: 0, component: <Welcome key="welcome" /> },
     { id: 1, component: <GetStarted key="getStarted" /> },
@@ -129,7 +115,7 @@ export const WelcomeCreateAdd = () => {
   ];
 
   const transitions = useTransition(screens[currentScreen], {
-    from: { opacity: 0, transform: "translateX(100%)" },
+    from: { opacity: 0, transform: "translateX(200%)" },
     enter: { opacity: 1, transform: "translateX(0%)" },
     leave: { opacity: 0, transform: "translateX(-100%)" },
     config: { tension: 220, friction: 30 },
@@ -139,12 +125,25 @@ export const WelcomeCreateAdd = () => {
 
   return (
     // <div className=" flex h-full w-full overflow-hidden bg-green-300">
-    <div className=" w-full self-center h-96 overflow-hidden ">
-      <animated.div style={{ ...transitions }} key={currentScreen}>
-        {transitions((style, item) => (
-          <animated.div style={style}>{item.component}</animated.div>
-        ))}
-      </animated.div>
+    <div className="relative w-full h-full overflow-hidden self-center ">
+      {/* <animated.div
+        style={{ ...transitions }}
+        key={currentScreen}
+        className="bg-purple-300"
+      > */}
+      {transitions((style, item) => (
+        <div className="absolute left-2/4 top-2/4 transform -translate-x-1/2 -translate-y-1/2 px-8 py-8 gap-4 border-box">
+          <animated.div
+            style={style}
+            className="flex items-center justify-center"
+          >
+            {item.component}
+          </animated.div>
+        </div>
+      ))}
+      {/* </animated.div> */}
+
+      {/* <p>Hello World</p> */}
     </div>
   );
 };
