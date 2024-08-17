@@ -114,8 +114,10 @@ export const WelcomeCreateAdd = () => {
     { id: 3, component: <CreateWallet key="createWallet" /> },
   ];
 
+  // If -1 from current screen?
+
   const transitions = useTransition(screens[currentScreen], {
-    from: { opacity: 0, transform: "translateX(200%)" },
+    from: { opacity: 0, transform: "translateX(100%)" },
     enter: { opacity: 1, transform: "translateX(0%)" },
     leave: { opacity: 0, transform: "translateX(-100%)" },
     config: { tension: 220, friction: 30 },
