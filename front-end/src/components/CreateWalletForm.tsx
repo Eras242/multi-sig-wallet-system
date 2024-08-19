@@ -4,6 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
+import { useEffect, useState } from "react";
+
+import { Separator } from "./ui/separator";
 
 import {
   AlertDialog,
@@ -28,19 +31,21 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { CreateWalletDialog } from "./CreateWalletDialog";
 
 const formSchema = z.object({
   owners: z.array(
     z.string().min(42, { message: "Owner address must be 42 characters long." })
   ),
   requiredMinimumThreshold: z
-    .number()
+    .string()
+    .transform((v) => parseInt(v, 10))
     .min(1, { message: "Minimum threshold must be at least 1." }),
   requiredInitialApprovals: z
-    .number()
+    .string()
     .min(1, { message: "Initial approvals must be at least 1." }),
   requiredInitialVotes: z
-    .number()
+    .string()
     .min(1, { message: "Initial votes must be at least 1." }),
   name: z
     .string()
@@ -60,8 +65,14 @@ export function CreateWalletForm() {
   });
 
   const onSubmit = (data: any) => {
-    console.log(data);
+    console.log("submitted form data:", data);
     // Handle form submission
+  };
+
+  const [owners, setOwners] = useState([]);
+
+  const addOwner = (newOwner: string) => {
+    // setOwners((prev) => (prev ? [...prev, newOwner] : prev));
   };
 
   return (
@@ -120,14 +131,14 @@ export function CreateWalletForm() {
               name="requiredMinimumThreshold"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Minimum Threshold</FormLabel>
+                  <FormLabel>Minimum Requried Approvals</FormLabel>
                   <FormControl>
                     <Input type="number" placeholder="1" {...field} />
                   </FormControl>
                   <FormDescription className="text-center">
                     The minimum number of approvals required to execute a
-                    transaction and vote on a proposal within the wallet
-                    handler.{" "}
+                    transaction and vote on a proposal both within the wallet
+                    and it's handler.{" "}
                     <i>
                       Please note that this value{" "}
                       <strong> cannot be changed </strong> after your contract
@@ -175,68 +186,9 @@ export function CreateWalletForm() {
             />
           </div>
         </div>
-        <AlertDialog>
-          <AlertDialogTrigger>
-            {" "}
-            <Button>Create Wallet</Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Risk Warning: </AlertDialogTitle>
-              <AlertDialogDescription className="flex flex-col gap-4">
-                By using this multi-signature smart contract wallet, you
-                acknowledge and understand the following risks:
-                <p>
-                  1. <strong>Safety and Security</strong>: While this
-                  multi-signature wallet is designed with security features to
-                  protect your digital assets, no system is entirely immune to
-                  risks. We recommend that all users exercise caution and ensure
-                  they fully understand the functionalities and limitations of
-                  smart contracts.{" "}
-                </p>
-                <p>
-                  2. <strong>Associated Risks</strong>: Smart contracts operate
-                  on the blockchain and are subject to potential
-                  vulnerabilities, including coding errors, bugs, or unforeseen
-                  interactions with other contracts. These risks could result in
-                  the partial or total loss of assets. Users should be aware
-                  that blockchain technology is experimental, and unforeseen
-                  issues may arise.
-                </p>
-                <p>
-                  3. <strong>User Responsibility</strong>: It is your
-                  responsibility to secure your private keys, understand the
-                  multi-signature process, and ensure that all parties involved
-                  in the multi-signature process are trustworthy. We do not have
-                  control over or access to your private keys, and we cannot
-                  recover lost assets.
-                </p>
-                <p>
-                  {" "}
-                  4. <strong>No Liability</strong>: We are not liable for any
-                  losses, damages, or claims arising from the use of our
-                  multi-signature wallet, including but not limited to losses
-                  due to security breaches, coding errors, or external attacks.
-                  Users agree to use our wallet at their own risk.
-                </p>
-                <p>
-                  {" "}
-                  5. <strong>Continuous Development</strong>: The smart contract
-                  and associated technology may undergo updates or changes.
-                </p>
-                It is your responsibility to stay informed about these changes
-                and how they may impact your use of the wallet. By proceeding,
-                you confirm that you understand these warnings and agree to
-                assume the associated risks.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction>Continue</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-        <Button type="submit">Create Wallet</Button>
+
+        <Button>Submit</Button>
+        <CreateWalletDialog />
       </form>
     </Form>
   );
