@@ -7,6 +7,7 @@ import React from "react";
 import { Separator } from "./ui/separator";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Progress } from "@/components/ui/progress";
 
 export const WelcomeCreateAdd = () => {
   const Container = ({ children }: { children: React.ReactNode }) => {
@@ -92,7 +93,7 @@ export const WelcomeCreateAdd = () => {
   const CreateWallet = () => {
     return (
       <Container>
-        <CreateWalletForm />
+        <CreateWalletForm setCurrentScreen={setCurrentScreen} />
         <Button
           variant={"outline"}
           className="flex gap-4"
@@ -105,6 +106,19 @@ export const WelcomeCreateAdd = () => {
     );
   };
 
+  const DeployingWallet = () => {
+    const [percentage, setPercentage] = useState(0);
+
+    return (
+      <Container>
+        <h2 className="font-bold text-2xl ">Deploying your new wallet:</h2>
+        <Separator className="w-80" />
+        <p>Sending Transaction ...</p>
+        <Progress value={33} className=" h-2" />
+      </Container>
+    );
+  };
+
   const [currentScreen, setCurrentScreen] = useState(0);
 
   const screens = [
@@ -112,6 +126,7 @@ export const WelcomeCreateAdd = () => {
     { id: 1, component: <GetStarted key="getStarted" /> },
     { id: 2, component: <AddWallet key="addWallet" /> },
     { id: 3, component: <CreateWallet key="createWallet" /> },
+    { id: 4, component: <DeployingWallet key="deployingWallet" /> },
   ];
 
   // If -1 from current screen?

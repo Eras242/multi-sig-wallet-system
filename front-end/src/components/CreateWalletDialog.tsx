@@ -21,7 +21,11 @@ import { Separator } from "./ui/separator";
 
 import { Button } from "@/components/ui/button";
 
-export const CreateWalletDialog = () => {
+export const CreateWalletDialog = ({
+  setCurrentScreen,
+}: {
+  setCurrentScreen: React.Dispatch<React.SetStateAction<number>>;
+}) => {
   const [currentStep, setCurrentStep] = useState(1);
   const goToNextStep = () => setCurrentStep(2);
 
@@ -111,7 +115,7 @@ export const CreateWalletDialog = () => {
           <animated.div style={transitionsNext}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle className="mb-4">Deploy Wallet</DialogTitle>
+                <DialogTitle className="mb-4">Create Wallet</DialogTitle>
                 <DialogDescription className="flex flex-col gap-4 flex-wrap ">
                   <div className="flex flex-row gap-2 items-center ">
                     <h1>Wallet Name: </h1>
@@ -126,19 +130,34 @@ export const CreateWalletDialog = () => {
                   <div className="flex flex-row gap-2 items-center w-full flex-wrap">
                     <h1>Initial Owners: </h1>
                     <div className="flex gap-2 w-full flex-wrap">
-                      <Button variant="outline" className="h-6 cursor-auto">
+                      <Button
+                        variant="outline"
+                        className="h-8 cursor-auto underline underline-offset-2"
+                      >
                         0xA3C1...f323
                       </Button>
-                      <Button variant="outline" className="h-6 cursor-auto">
+                      <Button
+                        variant="outline"
+                        className="h-8 cursor-auto underline underline-offset-2"
+                      >
                         0xC123...h5f3
                       </Button>
-                      <Button variant="outline" className="h-6 cursor-auto">
+                      <Button
+                        variant="outline"
+                        className="h-8 cursor-auto underline underline-offset-2"
+                      >
                         0x9876...2345
                       </Button>
-                      <Button variant="outline" className="h-6 cursor-auto">
+                      <Button
+                        variant="outline"
+                        className="h-8 cursor-auto underline underline-offset-2"
+                      >
                         0xDEF4...3210
                       </Button>
-                      <Button variant="outline" className="h-6 cursor-auto">
+                      <Button
+                        variant="outline"
+                        className="h-8 cursor-auto underline underline-offset-2"
+                      >
                         0x567G...4321
                       </Button>
                     </div>
@@ -181,7 +200,11 @@ export const CreateWalletDialog = () => {
                     Cancel
                   </Button>
                 </DialogClose>
-                <Button>Deploy Wallet</Button>
+                <DialogClose asChild>
+                  <Button onClick={() => setCurrentScreen(4)}>
+                    Create Wallet
+                  </Button>
+                </DialogClose>
               </DialogFooter>
             </DialogContent>
           </animated.div>
