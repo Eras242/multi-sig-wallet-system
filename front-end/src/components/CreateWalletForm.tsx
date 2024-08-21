@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { ExclamationCircleOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 
 import { Separator } from "./ui/separator";
@@ -64,53 +64,66 @@ export function CreateWalletForm({
   setCurrentScreen: React.Dispatch<React.SetStateAction<number>>;
 }) {
   const [ownerInput, setOwnerInput] = useState<string>("");
-  const [ownersArray, setOwnersArray] = useState<string[]>([""]);
+  const [ownersArray, setOwnersArray] = useState<string[]>([]);
+
+  useEffect(() => {}, [ownersArray]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    mode: "onBlur",
+    reValidateMode: "onChange",
     defaultValues: {
       owners: [],
-      requiredMinimumThreshold: "1",
-      requiredInitialApprovals: "1",
-      requiredInitialVotes: "1",
+      requiredMinimumThreshold: "",
+      requiredInitialApprovals: "",
+      requiredInitialVotes: "",
       name: "",
     },
   });
 
   const addSingleOwner = () => {
-    const currentOwners = form.getValues("owners");
-    if (ownerInput.length === 42) {
+    try {
+      // Validate the single address using zod
+      const ownerSchema = z
+        .string()
+        .min(42, { message: "Owner address must be 42 characters long." });
+
+      ownerSchema.parse(ownerInput); // This will throw an error if invalid
+
+      const currentOwners = form.getValues("owners");
       form.setValue("owners", [...currentOwners, ownerInput]);
       setOwnerInput(""); // Clear input field after adding
-    } else {
-      alert("Invalid address length");
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        alert(error.errors[0].message);
+      } else {
+        alert("Invalid owner address.");
+      }
     }
   };
 
   const addOwnersArray = () => {
     try {
       const newOwners = JSON.parse(ownerInput);
-      if (Array.isArray(newOwners)) {
-        const validOwners = newOwners.filter(
-          (owner: string) => owner.length === 42
-        );
-        if (validOwners.length === newOwners.length) {
-          form.setValue("owners", [
-            ...form.getValues("owners"),
-            ...validOwners,
-          ]);
-        } else {
-          alert("One or more addresses are invalid.");
-        }
-      } else {
-        alert("Input is not a valid array.");
-      }
+
+      // Validate the array of addresses using zod
+      formSchema.shape.owners.parse(newOwners); // This will throw an error if invalid
+
+      const currentOwners = form.getValues("owners");
+      form.setValue("owners", [...currentOwners, ...newOwners]);
+      setOwnerInput(""); // Clear input field after adding
     } catch (error) {
-      alert("Invalid JSON format for array input.");
+      if (error instanceof z.ZodError) {
+        alert(error.errors[0].message);
+      } else if (error instanceof SyntaxError) {
+        alert("Invalid JSON format for array input.");
+      } else {
+        alert("Invalid input.");
+      }
     }
   };
 
-  const onSubmit = (data: any) => {
+  const handleSubmit = (data: any) => {
     console.log("submitted form data:", data);
     // Handle form submission
   };
@@ -118,7 +131,7 @@ export function CreateWalletForm({
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(handleSubmit)}
         className=" space-y-8 w-[1200px] h-[600px] flex flex-col"
       >
         <div className="w-full ">
@@ -132,7 +145,7 @@ export function CreateWalletForm({
                   <Input
                     placeholder="My MultiSig Wallet..."
                     {...field}
-                    className="h-24  border-none focus:outline-none focus:ring-0 focus:border-none-none radius-md text-6xl font-semibold p-0"
+                    className="h-24  border-none border-transparent focus:border-transparent focus:ring-0  radius-md text-6xl font-semibold p-0"
                   />
                 </FormControl>
                 <FormMessage />
@@ -164,9 +177,24 @@ export function CreateWalletForm({
                 Add an owner individually or enter the addresses as an array
                 (e.g. ["wallet1", "wallet2", ...]).
               </FormDescription>
-              <FormMessage />
+              <FormMessage name="owners" />
             </FormItem>
           </div>
+          <div className="w-full h-24 bg-blue-500 mt-4 overflow-auto">
+            {ownersArray.length === 0 ? (
+              <p className="text-white">No owners added yet.</p>
+            ) : (
+              ownersArray.map((owner, index) => (
+                <div
+                  key={index}
+                  className="inline-block m-2 p-2 bg-white text-black rounded shadow"
+                >
+                  <Button className="w-full h-full">{owner}</Button>
+                </div>
+              ))
+            )}
+          </div>
+
           <div className=" flex flex-row gap-8 justify-evenly mt-12">
             <FormField
               control={form.control}
@@ -175,7 +203,7 @@ export function CreateWalletForm({
                 <FormItem>
                   <FormLabel>Minimum Requried Approvals</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="1" {...field} />
+                    <Input type="number" placeholder="..." {...field} />
                   </FormControl>
                   <FormDescription className="text-center">
                     The minimum number of approvals required to execute a
@@ -191,7 +219,6 @@ export function CreateWalletForm({
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="requiredInitialApprovals"
@@ -199,7 +226,7 @@ export function CreateWalletForm({
                 <FormItem>
                   <FormLabel>Initial Approvals</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="1" {...field} />
+                    <Input type="number" placeholder="..." {...field} />
                   </FormControl>
                   <FormDescription className="text-center">
                     The initial number of approvals required to execute a
@@ -217,7 +244,7 @@ export function CreateWalletForm({
                 <FormItem>
                   <FormLabel>Initial Votes</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="1" {...field} />
+                    <Input type="number" placeholder="..." {...field} />
                   </FormControl>
                   <FormDescription className="text-center">
                     The initial number of votes required to vote on a proposal.
@@ -228,12 +255,8 @@ export function CreateWalletForm({
             />
           </div>
         </div>
-        {/* 
-        <CreateWalletDialog
-          setCurrentScreen={setCurrentScreen}
-          handleSubmit={handleSubmit}
-          data={form.data}
-        /> */}
+
+        <CreateWalletDialog setCurrentScreen={setCurrentScreen} form={form} />
       </form>
     </Form>
   );

@@ -3,6 +3,7 @@
 import { useSpring, animated } from "@react-spring/web";
 import { useState } from "react";
 import { ArrowLeftOutlined } from "@ant-design/icons";
+import { UseFormReturn } from "react-hook-form";
 
 import {
   Dialog,
@@ -23,8 +24,20 @@ import { Button } from "@/components/ui/button";
 
 export const CreateWalletDialog = ({
   setCurrentScreen,
+  form,
 }: {
   setCurrentScreen: React.Dispatch<React.SetStateAction<number>>;
+  form: UseFormReturn<
+    {
+      owners: string[];
+      requiredMinimumThreshold: string;
+      requiredInitialApprovals: string;
+      requiredInitialVotes: string;
+      name: string;
+    },
+    any,
+    undefined
+  >;
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const goToNextStep = () => setCurrentStep(2);
@@ -42,7 +55,10 @@ export const CreateWalletDialog = ({
   });
   return (
     <Dialog>
-      <DialogTrigger asChild>
+      <DialogTrigger
+        asChild
+        disabled={!form.formState.isValid || form.formState.isSubmitting}
+      >
         <Button variant="outline" onClick={() => setCurrentStep(1)}>
           Create Wallet
         </Button>
