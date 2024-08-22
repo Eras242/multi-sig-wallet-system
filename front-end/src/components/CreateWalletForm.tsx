@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
+import { animated, useTransition } from "@react-spring/web";
 
 import { Separator } from "./ui/separator";
 
@@ -41,6 +42,14 @@ const formSchema = z.object({
         .min(42, { message: "Owner address must be 42 characters long." })
     )
     .min(1, { message: "At least one owner address is required." }),
+  // .refine(
+  //   (owners) => {
+  //     // Check for duplicates
+  //     const uniqueOwners = new Set(owners);
+  //     return uniqueOwners.size === owners.length;
+  //   },
+  //   { message: "Duplicate owner addresses are not allowed." }
+  // ),
   requiredMinimumThreshold: z
     .string()
     // .transform((v) => parseInt(v, 10))
@@ -70,7 +79,7 @@ export function CreateWalletForm({
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    mode: "onBlur",
+    mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
       owners: [],
@@ -81,47 +90,63 @@ export function CreateWalletForm({
     },
   });
 
-  const addSingleOwner = () => {
-    try {
-      // Validate the single address using zod
-      const ownerSchema = z
-        .string()
-        .min(42, { message: "Owner address must be 42 characters long." });
+  const addOwners = () => {
+    const currentOwners = form.getValues("owners");
 
-      ownerSchema.parse(ownerInput); // This will throw an error if invalid
-
-      const currentOwners = form.getValues("owners");
-      form.setValue("owners", [...currentOwners, ownerInput]);
-      setOwnerInput(""); // Clear input field after adding
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        alert(error.errors[0].message);
-      } else {
-        alert("Invalid owner address.");
-      }
-    }
-  };
-
-  const addOwnersArray = () => {
+    // Try to parse the input as a JSON array
     try {
       const newOwners = JSON.parse(ownerInput);
 
-      // Validate the array of addresses using zod
-      formSchema.shape.owners.parse(newOwners); // This will throw an error if invalid
+      if (Array.isArray(newOwners)) {
+        // Validate that all items in the array are valid addresses
+        const validOwners = newOwners.filter(
+          (owner: string) =>
+            owner.length === 42 && ownerInput.substring(0, 2) === "0x"
+        );
 
-      const currentOwners = form.getValues("owners");
-      form.setValue("owners", [...currentOwners, ...newOwners]);
-      setOwnerInput(""); // Clear input field after adding
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        alert(error.errors[0].message);
-      } else if (error instanceof SyntaxError) {
-        alert("Invalid JSON format for array input.");
+        if (validOwners.length === newOwners.length) {
+          form.setValue("owners", [...currentOwners, ...validOwners]);
+          setOwnersArray((prev) => [...prev, ...validOwners]); // Update state with new owners
+          setOwnerInput(""); // Clear input field after adding
+          console.log("Updated ownersArray:", ownersArray);
+          console.log(form.getValues("owners"));
+        } else {
+          alert("One or more addresses are invalid.");
+        }
       } else {
-        alert("Invalid input.");
+        alert("Input is not a valid array.");
+      }
+    } catch (error) {
+      // If parsing fails, treat the input as a single address
+      if (ownerInput.length === 42 && ownerInput.substring(0, 2) === "0x") {
+        // write an if statement to check if ownerInput is already in owners Array
+        if (ownersArray.includes(ownerInput)) {
+          return;
+        } else {
+          form.setValue("owners", [...currentOwners, ownerInput]);
+          setOwnersArray((prev) => [...prev, ownerInput]); // Update state with new owner
+          setOwnerInput(""); // Clear input field after adding
+          console.log("Updated ownersArray:", ownersArray);
+          console.log(form.getValues("owners"));
+        }
+
+        form.setValue("owners", [...currentOwners, ownerInput]);
+        setOwnersArray((prev) => [...prev, ownerInput]); // Update state with new owner
+        setOwnerInput(""); // Clear input field after adding
+        console.log("Updated ownersArray:", ownersArray);
+        console.log(form.getValues("owners"));
+      } else {
+        alert("Invalid address length");
       }
     }
   };
+
+  const transitions = useTransition(ownersArray, {
+    from: { opacity: 0, transform: "translateY(20px)" },
+    enter: { opacity: 1, transform: "translateY(0px)" },
+    leave: { opacity: 0, transform: "translateY(20px)" },
+    config: { tension: 170, friction: 20 }, // Duration of the animation in milliseconds
+  });
 
   const handleSubmit = (data: any) => {
     console.log("submitted form data:", data);
@@ -166,32 +191,46 @@ export function CreateWalletForm({
                     placeholder="0xABC123... or [0xABC123..., 0xDEF456...]"
                   />
                 </FormControl>
-                <Button className="w-1/4" onClick={addSingleOwner}>
-                  Add Owner
-                </Button>
-                <Button className="w-1/4" onClick={addOwnersArray}>
-                  Add Owners
+                <Button className="w-1/4" onClick={addOwners} type="button">
+                  Add Owner(s)
                 </Button>
               </div>
               <FormDescription className="text-center self-start">
                 Add an owner individually or enter the addresses as an array
                 (e.g. ["wallet1", "wallet2", ...]).
               </FormDescription>
-              <FormMessage name="owners" />
+              <FormMessage />
             </FormItem>
           </div>
-          <div className="w-full h-24 bg-blue-500 mt-4 overflow-auto">
+          <div className="w-full h-24 mt-4 overflow-auto">
             {ownersArray.length === 0 ? (
               <p className="text-white">No owners added yet.</p>
             ) : (
-              ownersArray.map((owner, index) => (
-                <div
-                  key={index}
-                  className="inline-block m-2 p-2 bg-white text-black rounded shadow"
-                >
-                  <Button className="w-full h-full">{owner}</Button>
-                </div>
-              ))
+              <div className="w-full h-full">
+                {transitions((style, owner) => (
+                  <animated.div
+                    className="inline-block"
+                    style={style}
+                    key={ownersArray.indexOf(owner)}
+                  >
+                    <Button
+                      className="underline m-2 p-2"
+                      variant={"outline"}
+                      key={ownersArray.indexOf(owner)}
+                    >
+                      {owner.substring(0, 6)}...{owner.substring(6, 10)}
+                    </Button>
+                  </animated.div>
+                ))}
+              </div>
+
+              // ownersArray.map((owner, index) => (
+              //   <div key={index} className="inline-block">
+              //     <Button className=" underline m-2 p-2" variant={"outline"}>
+              //       {owner.substring(0, 6)}...{owner.substring(6, 10)}
+              //     </Button>
+              //   </div>
+              // ))
             )}
           </div>
 

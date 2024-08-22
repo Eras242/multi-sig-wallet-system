@@ -139,43 +139,23 @@ export const CreateWalletDialog = ({
                       variant="outline"
                       className="h-8 cursor-auto ml-auto"
                     >
-                      My Wallet Name
+                      {form && form.getValues("name")}
                     </Button>
                   </div>
                   <Separator />
                   <div className="flex flex-row gap-2 items-center w-full flex-wrap">
                     <h1>Initial Owners: </h1>
                     <div className="flex gap-2 w-full flex-wrap">
-                      <Button
-                        variant="outline"
-                        className="h-8 cursor-auto underline underline-offset-2"
-                      >
-                        0xA3C1...f323
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="h-8 cursor-auto underline underline-offset-2"
-                      >
-                        0xC123...h5f3
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="h-8 cursor-auto underline underline-offset-2"
-                      >
-                        0x9876...2345
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="h-8 cursor-auto underline underline-offset-2"
-                      >
-                        0xDEF4...3210
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="h-8 cursor-auto underline underline-offset-2"
-                      >
-                        0x567G...4321
-                      </Button>
+                      {form &&
+                        form.getValues("owners").map((owner, index) => (
+                          <Button
+                            key={index}
+                            variant="outline"
+                            className="h-8 cursor-auto underline underline-offset-2"
+                          >
+                            {owner.substring(0, 6)}...{owner.substring(6, 10)}
+                          </Button>
+                        ))}
                     </div>
                   </div>
 
@@ -186,7 +166,7 @@ export const CreateWalletDialog = ({
                       variant="default"
                       className="h-8 cursor-auto ml-auto"
                     >
-                      3
+                      {form && form.getValues("requiredMinimumThreshold")}
                     </Button>
                   </div>
                   <div className="flex flex-row gap-2 items-center  ">
@@ -195,7 +175,7 @@ export const CreateWalletDialog = ({
                       variant="outline"
                       className="h-8 cursor-automl-auto ml-auto"
                     >
-                      3
+                      {form && form.getValues("requiredInitialApprovals")}
                     </Button>
                   </div>
                   <div className="flex flex-row gap-2 items-center ">
@@ -204,7 +184,7 @@ export const CreateWalletDialog = ({
                       variant="outline"
                       className="h-8 cursor-auto ml-auto"
                     >
-                      3
+                      {form && form.getValues("requiredInitialVotes")}
                     </Button>
                   </div>
                   <Separator />
