@@ -25,7 +25,7 @@ export const ConnectWallet = () => {
           (!authenticationStatus || authenticationStatus === "authenticated");
         return (
           <div
-            className="ml-auto"
+            className="w-full"
             {...(!ready && {
               "aria-hidden": true,
               style: {
@@ -39,10 +39,10 @@ export const ConnectWallet = () => {
               if (!connected) {
                 return (
                   <Button
-                    variant={"outline"}
+                    variant={"default"}
                     onClick={openConnectModal}
                     type="button"
-                    className="ml-auto"
+                    className="w-full"
                   >
                     Connect Wallet
                   </Button>

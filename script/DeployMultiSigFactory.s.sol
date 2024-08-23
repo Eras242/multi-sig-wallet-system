@@ -3,15 +3,19 @@ pragma solidity ^0.8.18;
 
 import {MultiSigFactory} from "../src/MultiSigFactory.sol";
 
-import {Script} from "forge-std/Script.sol";
+import {Script, console} from "forge-std/Script.sol";
 
 contract DeployMultiSigFactory is Script {
     MultiSigFactory multiSigFactory;
 
     function run() public returns (MultiSigFactory) {
-        vm.startBroadcast();
-        multiSigFactory = new MultiSigFactory();
+        uint256 privateKey = vm.envUint("DEV_PRIVATE_KEY");
+        address account = vm.addr(privateKey);
+        console.log("Account", account);
+
+        vm.startBroadcast(privateKey);
+        MultiSigFactory factory = new MultiSigFactory();
         vm.stopBroadcast();
-        return multiSigFactory;
+        return factory;
     }
 }

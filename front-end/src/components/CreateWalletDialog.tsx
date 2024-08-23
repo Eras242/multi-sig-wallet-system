@@ -4,6 +4,7 @@ import { useSpring, animated } from "@react-spring/web";
 import { useState } from "react";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { UseFormReturn } from "react-hook-form";
+import { createMultiSigWallet } from "@/data/actions";
 
 import {
   Dialog,
@@ -30,9 +31,9 @@ export const CreateWalletDialog = ({
   form: UseFormReturn<
     {
       owners: string[];
-      requiredMinimumThreshold: string;
-      requiredInitialApprovals: string;
-      requiredInitialVotes: string;
+      requiredMinimumThreshold: number;
+      requiredInitialApprovals: number;
+      requiredInitialVotes: number;
       name: string;
     },
     any,
@@ -197,7 +198,12 @@ export const CreateWalletDialog = ({
                   </Button>
                 </DialogClose>
                 <DialogClose asChild>
-                  <Button onClick={() => setCurrentScreen(4)}>
+                  <Button
+                    onClick={() => {
+                      setCurrentScreen(4);
+                      createMultiSigWallet(form);
+                    }}
+                  >
                     Create Wallet
                   </Button>
                 </DialogClose>

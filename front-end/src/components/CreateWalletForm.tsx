@@ -6,6 +6,8 @@ import { z } from "zod";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { animated, useTransition } from "@react-spring/web";
+import { ConnectWallet } from "@/components/ConnectWallet";
+import { useAccount } from "wagmi";
 
 import { Separator } from "./ui/separator";
 
@@ -34,36 +36,106 @@ import {
 import { Input } from "@/components/ui/input";
 import { CreateWalletDialog } from "./CreateWalletDialog";
 
-const formSchema = z.object({
-  owners: z
-    .array(
-      z
-        .string()
-        .min(42, { message: "Owner address must be 42 characters long." })
-    )
-    .min(1, { message: "At least one owner address is required." }),
-  // .refine(
-  //   (owners) => {
-  //     // Check for duplicates
-  //     const uniqueOwners = new Set(owners);
-  //     return uniqueOwners.size === owners.length;
-  //   },
-  //   { message: "Duplicate owner addresses are not allowed." }
-  // ),
-  requiredMinimumThreshold: z
-    .string()
-    // .transform((v) => parseInt(v, 10))
-    .min(1, { message: "Minimum threshold must be at least 1." }),
-  requiredInitialApprovals: z
-    .string()
-    .min(1, { message: "Initial approvals must be at least 1." }),
-  requiredInitialVotes: z
-    .string()
-    .min(1, { message: "Initial votes must be at least 1." }),
-  name: z
-    .string()
-    .min(2, { message: "Name must be at least 2 characters long." }),
-});
+// const formSchema = z.object({
+//   owners: z
+//     .array(
+//       z
+//         .string()
+//         .min(42, { message: "Owner address must be 42 characters long." })
+//     )
+//     .min(1, { message: "At least one owner address is required." }),
+//   requiredMinimumThreshold: z
+//     .string()
+//     // .transform((v) => parseInt(v, 10))
+//     .min(1, { message: "Minimum threshold must be at least 1." }),
+//   requiredInitialApprovals: z
+//     .string()
+//     .min(1, { message: "Initial approvals must be at least 1." }),
+//   requiredInitialVotes: z
+//     .string()
+//     .min(1, { message: "Initial votes must be at least 1." }),
+//   name: z
+//     .string()
+//     .min(2, { message: "Name must be at least 2 characters long." }),
+// });
+
+const formSchema = z
+  .object({
+    owners: z
+      .array(
+        z
+          .string()
+          .length(42, { message: "Owner address must be 42 characters long." })
+      )
+      .min(1, { message: "At least one owner address is required." }),
+
+    requiredMinimumThreshold: z
+      .string()
+      .min(1, { message: "Minimum threshold must be at least 1." })
+      .transform((val) => parseInt(val, 10)),
+
+    requiredInitialApprovals: z
+      .string()
+      .min(1, { message: "Initial approvals must be at least 1." })
+      .transform((val) => parseInt(val, 10)),
+
+    requiredInitialVotes: z
+      .string()
+      .min(1, { message: "Initial votes must be at least 1." })
+      .transform((val) => parseInt(val, 10)),
+
+    name: z
+      .string()
+      .min(2, { message: "Name must be at least 2 characters long." }),
+  })
+  .superRefine((data, ctx) => {
+    const ownersCount = data.owners.length;
+    const minThreshold = data.requiredMinimumThreshold;
+    const initialApprovals = data.requiredInitialApprovals;
+    const initialVotes = data.requiredInitialVotes;
+
+    if (minThreshold > ownersCount) {
+      ctx.addIssue({
+        path: ["requiredMinimumThreshold"],
+        code: z.ZodIssueCode.custom,
+        message:
+          "Minimum threshold cannot be greater than the number of owners.",
+      });
+    }
+
+    if (initialApprovals < minThreshold) {
+      ctx.addIssue({
+        path: ["requiredInitialApprovals"],
+        code: z.ZodIssueCode.custom,
+        message: "Initial approvals cannot be less than the minimum threshold.",
+      });
+    }
+
+    if (initialApprovals > ownersCount) {
+      ctx.addIssue({
+        path: ["requiredInitialApprovals"],
+        code: z.ZodIssueCode.custom,
+        message:
+          "Initial approvals cannot be greater than the number of owners.",
+      });
+    }
+
+    if (initialVotes < minThreshold) {
+      ctx.addIssue({
+        path: ["requiredInitialVotes"],
+        code: z.ZodIssueCode.custom,
+        message: "Initial votes cannot be less than the minimum threshold.",
+      });
+    }
+
+    if (initialVotes > ownersCount) {
+      ctx.addIssue({
+        path: ["requiredInitialVotes"],
+        code: z.ZodIssueCode.custom,
+        message: "Initial votes cannot be greater than the number of owners.",
+      });
+    }
+  });
 
 type FormData = z.infer<typeof formSchema>;
 
@@ -74,8 +146,7 @@ export function CreateWalletForm({
 }) {
   const [ownerInput, setOwnerInput] = useState<string>("");
   const [ownersArray, setOwnersArray] = useState<string[]>([]);
-
-  useEffect(() => {}, [ownersArray]);
+  const { isConnected, address } = useAccount();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -83,60 +154,107 @@ export function CreateWalletForm({
     reValidateMode: "onChange",
     defaultValues: {
       owners: [],
-      requiredMinimumThreshold: "",
-      requiredInitialApprovals: "",
-      requiredInitialVotes: "",
+      requiredMinimumThreshold: undefined,
+      requiredInitialApprovals: undefined,
+      requiredInitialVotes: undefined,
       name: "",
     },
   });
 
+  // const addOwners = () => {
+  //   const currentOwners = form.getValues("owners");
+
+  //   // Try to parse the input as a JSON array
+  //   try {
+  //     const newOwners = JSON.parse(ownerInput);
+
+  //     if (Array.isArray(newOwners)) {
+  //       // Validate that all items in the array are valid addresses
+  //       const validOwners = newOwners.filter(
+  //         (owner: string) =>
+  //           owner.length === 42 && owner.substring(0, 2) === "0x"
+  //       );
+
+  //       if (validOwners.length === newOwners.length) {
+  //         form.setValue("owners", [...currentOwners, ...validOwners]);
+  //         setOwnersArray((prev) => [...prev, ...validOwners]); // Update state with new owners
+  //         setOwnerInput(""); // Clear input field after adding
+  //         console.log("Updated ownersArray:", ownersArray);
+  //         console.log(form.getValues("owners"));
+  //       } else {
+  //         alert("One or more addresses are invalid.");
+  //       }
+  //     } else {
+  //       alert("Input is not a valid array.");
+  //     }
+  //   } catch (error) {
+  //     // If parsing fails, treat the input as a single address
+  //     if (ownerInput.length === 42 && ownerInput.substring(0, 2) === "0x") {
+  //       // write an if statement to check if ownerInput is already in owners Array
+  //       if (ownersArray.includes(ownerInput)) {
+  //         console.log("Error");
+  //         form.setError("owners", {
+  //           type: "manual",
+  //           message: "Duplicate owner addresses are not allowed.",
+  //         });
+  //         return;
+  //       } else {
+  //         form.setValue("owners", [...currentOwners, ownerInput]);
+  //         setOwnersArray((prev) => [...prev, ownerInput]); // Update state with new owner
+  //         setOwnerInput(""); // Clear input field after adding
+  //         console.log("Updated ownersArray:", ownersArray);
+  //         console.log(form.getValues("owners"));
+  //       }
+  //     } else {
+  //       alert("Invalid address length");
+  //     }
+  //   }
+  // };
+
   const addOwners = () => {
     const currentOwners = form.getValues("owners");
 
-    // Try to parse the input as a JSON array
     try {
       const newOwners = JSON.parse(ownerInput);
 
       if (Array.isArray(newOwners)) {
-        // Validate that all items in the array are valid addresses
         const validOwners = newOwners.filter(
-          (owner: string) =>
-            owner.length === 42 && ownerInput.substring(0, 2) === "0x"
+          (owner: string) => owner.length === 42 && owner.startsWith("0x")
         );
 
         if (validOwners.length === newOwners.length) {
           form.setValue("owners", [...currentOwners, ...validOwners]);
-          setOwnersArray((prev) => [...prev, ...validOwners]); // Update state with new owners
-          setOwnerInput(""); // Clear input field after adding
-          console.log("Updated ownersArray:", ownersArray);
-          console.log(form.getValues("owners"));
+          setOwnersArray((prev) => [...prev, ...validOwners]);
+          setOwnerInput("");
         } else {
-          alert("One or more addresses are invalid.");
+          form.setError("owners", {
+            type: "manual",
+            message: "One or more addresses are invalid.",
+          });
         }
       } else {
-        alert("Input is not a valid array.");
+        form.setError("owners", {
+          type: "manual",
+          message: "Input is not valid.",
+        });
       }
     } catch (error) {
-      // If parsing fails, treat the input as a single address
-      if (ownerInput.length === 42 && ownerInput.substring(0, 2) === "0x") {
-        // write an if statement to check if ownerInput is already in owners Array
+      if (ownerInput.length === 42 && ownerInput.startsWith("0x")) {
         if (ownersArray.includes(ownerInput)) {
-          return;
+          form.setError("owners", {
+            type: "manual",
+            message: "Duplicate owner addresses are not allowed.",
+          });
         } else {
           form.setValue("owners", [...currentOwners, ownerInput]);
-          setOwnersArray((prev) => [...prev, ownerInput]); // Update state with new owner
-          setOwnerInput(""); // Clear input field after adding
-          console.log("Updated ownersArray:", ownersArray);
-          console.log(form.getValues("owners"));
+          setOwnersArray((prev) => [...prev, ownerInput]);
+          setOwnerInput("");
         }
-
-        form.setValue("owners", [...currentOwners, ownerInput]);
-        setOwnersArray((prev) => [...prev, ownerInput]); // Update state with new owner
-        setOwnerInput(""); // Clear input field after adding
-        console.log("Updated ownersArray:", ownersArray);
-        console.log(form.getValues("owners"));
       } else {
-        alert("Invalid address length");
+        form.setError("owners", {
+          type: "manual",
+          message: "Invalid address length.",
+        });
       }
     }
   };
@@ -159,6 +277,7 @@ export function CreateWalletForm({
         onSubmit={form.handleSubmit(handleSubmit)}
         className=" space-y-8 w-[1200px] h-[600px] flex flex-col"
       >
+        {/* Name */}
         <div className="w-full ">
           <FormField
             control={form.control}
@@ -179,123 +298,140 @@ export function CreateWalletForm({
           />
         </div>
 
-        <div className="h-auto mt-12">
-          <div className="w-full">
-            <FormItem className="flex flex-col">
-              <FormLabel>Owners</FormLabel>
-              <div className="flex row gap-8 w-full">
-                <FormControl>
-                  <Input
-                    value={ownerInput}
-                    onChange={(e) => setOwnerInput(e.target.value)}
-                    placeholder="0xABC123... or [0xABC123..., 0xDEF456...]"
-                  />
-                </FormControl>
-                <Button className="w-1/4" onClick={addOwners} type="button">
-                  Add Owner(s)
-                </Button>
-              </div>
-              <FormDescription className="text-center self-start">
-                Add an owner individually or enter the addresses as an array
-                (e.g. ["wallet1", "wallet2", ...]).
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          </div>
-          <div className="w-full h-24 mt-4 overflow-auto">
-            {ownersArray.length === 0 ? (
-              <p className="text-white">No owners added yet.</p>
-            ) : (
-              <div className="w-full h-full">
-                {transitions((style, owner) => (
-                  <animated.div
-                    className="inline-block"
-                    style={style}
-                    key={ownersArray.indexOf(owner)}
-                  >
-                    <Button
-                      className="underline m-2 p-2"
-                      variant={"outline"}
-                      key={ownersArray.indexOf(owner)}
-                    >
-                      {owner.substring(0, 6)}...{owner.substring(6, 10)}
-                    </Button>
-                  </animated.div>
-                ))}
-              </div>
-
-              // ownersArray.map((owner, index) => (
-              //   <div key={index} className="inline-block">
-              //     <Button className=" underline m-2 p-2" variant={"outline"}>
-              //       {owner.substring(0, 6)}...{owner.substring(6, 10)}
-              //     </Button>
-              //   </div>
-              // ))
+        {/* Owners */}
+        <div className="w-full">
+          <FormField
+            control={form.control}
+            name="owners"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Owners</FormLabel>
+                <div className="flex row gap-8 w-full">
+                  <FormControl>
+                    <Input
+                      value={ownerInput}
+                      onChange={(e) => setOwnerInput(e.target.value)}
+                      placeholder="0xABC123... or [0xABC123..., 0xDEF456...]"
+                    />
+                  </FormControl>
+                  <Button className="w-1/4" onClick={addOwners} type="button">
+                    Add Owner(s)
+                  </Button>
+                </div>
+                <FormMessage />
+                <FormDescription className="text-center self-start">
+                  Add an owner individually or enter the addresses as an array
+                  (e.g. ["wallet1", "wallet2", ...]).
+                </FormDescription>
+              </FormItem>
             )}
-          </div>
-
-          <div className=" flex flex-row gap-8 justify-evenly mt-12">
-            <FormField
-              control={form.control}
-              name="requiredMinimumThreshold"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Minimum Requried Approvals</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="..." {...field} />
-                  </FormControl>
-                  <FormDescription className="text-center">
-                    The minimum number of approvals required to execute a
-                    transaction and vote on a proposal both within the wallet
-                    and it's handler.{" "}
-                    <i>
-                      Please note that this value{" "}
-                      <strong> cannot be changed </strong> after your contract
-                      has been deployed.
-                    </i>
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="requiredInitialApprovals"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Initial Approvals</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="..." {...field} />
-                  </FormControl>
-                  <FormDescription className="text-center">
-                    The initial number of approvals required to execute a
-                    transaction.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="requiredInitialVotes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Initial Votes</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="..." {...field} />
-                  </FormControl>
-                  <FormDescription className="text-center">
-                    The initial number of votes required to vote on a proposal.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          />
+        </div>
+        <div className="w-full h-16 mt-4 overflow-auto">
+          {ownersArray.length === 0 ? (
+            <p className="text-white">No owners added yet.</p>
+          ) : (
+            <div className="w-full h-full flex row gap-2">
+              {transitions((style, owner) => (
+                <animated.div
+                  className="inline-block"
+                  style={style}
+                  key={ownersArray.indexOf(owner)}
+                >
+                  <Button
+                    className="underline p-2 bg-gray-50"
+                    variant={"outline"}
+                    key={ownersArray.indexOf(owner)}
+                    type="button"
+                  >
+                    {owner.substring(0, 6)}...{owner.substring(6, 10)}
+                  </Button>
+                </animated.div>
+              ))}
+            </div>
+          )}
         </div>
 
-        <CreateWalletDialog setCurrentScreen={setCurrentScreen} form={form} />
+        {/* Required Numbers */}
+        <div className=" flex flex-row gap-8 justify-evenly mt-12">
+          <FormField
+            control={form.control}
+            name="requiredMinimumThreshold"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Minimum Required Approvals</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="..."
+                    className="no-arrows"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription className="text-center">
+                  The minimum number of approvals required to execute a
+                  transaction and vote on a proposal both within the wallet and
+                  it's handler.{" "}
+                  <i>
+                    Please note that this value{" "}
+                    <strong> cannot be changed </strong> after your contract has
+                    been deployed.
+                  </i>
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="requiredInitialApprovals"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Initial Approvals</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="..."
+                    className="no-arrows"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription className="text-center">
+                  The initial number of approvals required to execute a
+                  transaction.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="requiredInitialVotes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Initial Votes</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="..."
+                    className="no-arrows"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription className="text-center">
+                  The initial number of votes required to vote on a proposal.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        {isConnected ? (
+          <CreateWalletDialog setCurrentScreen={setCurrentScreen} form={form} />
+        ) : (
+          <ConnectWallet />
+        )}
       </form>
     </Form>
   );
