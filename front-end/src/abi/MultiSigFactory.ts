@@ -1,8 +1,13 @@
 export const abi = [
   {
+    type: "function",
     name: "createMultiSigWalletAndHandler",
     inputs: [
-      { name: "_owners", type: "address[]", internalType: "address[]" },
+      {
+        name: "_owners",
+        type: "address[]",
+        internalType: "address[]",
+      },
       {
         name: "_requiredMinimumThreshold",
         type: "uint256",
@@ -18,7 +23,11 @@ export const abi = [
         type: "uint256",
         internalType: "uint256",
       },
-      { name: "_name", type: "string", internalType: "string" },
+      {
+        name: "_name",
+        type: "string",
+        internalType: "string",
+      },
     ],
     outputs: [
       {
@@ -32,5 +41,31 @@ export const abi = [
         internalType: "contract MultiSigHandler",
       },
     ],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "event",
+    name: "MultiSigWalletAndHandlerCreated",
+    inputs: [
+      {
+        name: "initializer",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "wallet",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "handler",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
   },
 ] as const;

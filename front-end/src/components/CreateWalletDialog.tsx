@@ -4,7 +4,8 @@ import { useSpring, animated } from "@react-spring/web";
 import { useState } from "react";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { UseFormReturn } from "react-hook-form";
-import { createMultiSigWallet } from "@/data/actions";
+import { useWriteContract } from "wagmi";
+import { abi } from "@/abi/MultiSigFactory";
 
 import {
   Dialog,
@@ -24,9 +25,23 @@ import { Separator } from "./ui/separator";
 import { Button } from "@/components/ui/button";
 
 export const CreateWalletDialog = ({
+  sendCreateWalletTransaction,
   setCurrentScreen,
   form,
 }: {
+  sendCreateWalletTransaction: (
+    form: UseFormReturn<
+      {
+        owners: string[];
+        requiredMinimumThreshold: number;
+        requiredInitialApprovals: number;
+        requiredInitialVotes: number;
+        name: string;
+      },
+      any,
+      undefined
+    >
+  ) => Promise<void>;
   setCurrentScreen: React.Dispatch<React.SetStateAction<number>>;
   form: UseFormReturn<
     {
@@ -54,6 +69,7 @@ export const CreateWalletDialog = ({
     transform: currentStep === 2 ? "translateX(0%)" : "translateX(100%)",
     config: { tension: 250, friction: 30 },
   });
+
   return (
     <Dialog>
       <DialogTrigger
@@ -201,7 +217,7 @@ export const CreateWalletDialog = ({
                   <Button
                     onClick={() => {
                       setCurrentScreen(4);
-                      createMultiSigWallet(form);
+                      sendCreateWalletTransaction(form);
                     }}
                   >
                     Create Wallet
@@ -215,59 +231,3 @@ export const CreateWalletDialog = ({
     </Dialog>
   );
 };
-
-/* <DialogHeader>
-<DialogTitle>Risk Warning</DialogTitle>
-<DialogDescription className="flex flex-col gap-4">
-  By deploying and using this multi-signature smart contract
-  wallet, you acknowledge and understand the following risks:
-  <p>
-    1. <strong>Safety and Security</strong>: While this
-    multi-signature wallet is designed with security features to
-    protect your digital assets, no system is entirely immune to
-    risks. We recommend that all users exercise caution and
-    ensure they fully understand the functionalities and
-    limitations of smart contracts.{" "}
-  </p>
-  <p>
-    2. <strong>Associated Risks</strong>: Smart contracts
-    operate on the blockchain and are subject to potential
-    vulnerabilities, including coding errors, bugs, or
-    unforeseen interactions with other contracts. These risks
-    could result in the partial or total loss of assets. Users
-    should be aware that blockchain technology is experimental,
-    and unforeseen issues may arise.
-  </p>
-  <p>
-    3. <strong>User Responsibility</strong>: It is your
-    responsibility to secure your private keys, understand the
-    multi-signature process, and ensure that all parties
-    involved in the multi-signature process are trustworthy. We
-    do not have control over or access to your private keys, and
-    we cannot recover lost assets.
-  </p>
-  <p>
-    {" "}
-    4. <strong>No Liability</strong>: We are not liable for any
-    losses, damages, or claims arising from the use of our
-    multi-signature wallet, including but not limited to losses
-    due to security breaches, coding errors, or external
-    attacks. Users agree to use our wallet at their own risk.
-  </p>
-  <p>
-    {" "}
-    5. <strong>Continuous Development</strong>: The smart
-    contract and associated technology may undergo updates or
-    changes.
-  </p>
-  It is your responsibility to stay informed about these changes
-  and how they may impact your use of the wallet. By proceeding,
-  you confirm that you understand these warnings and agree to
-  assume the associated risks.
-</DialogDescription>
-</DialogHeader>
-<DialogFooter>
-<Button variant="default" onClick={goToNextStep}>
-  Continue
-</Button>
-</DialogFooter> */

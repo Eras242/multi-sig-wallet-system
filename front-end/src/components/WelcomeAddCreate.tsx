@@ -8,8 +8,71 @@ import { Separator } from "./ui/separator";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Progress } from "@/components/ui/progress";
+import { useWaitForTransactionReceipt } from "wagmi";
+
+import { UseFormReturn } from "react-hook-form";
+
+import { useWriteContract } from "wagmi";
+import { abi } from "@/abi/MultiSigFactory";
 
 export const WelcomeCreateAdd = () => {
+  const { data: hash, isPending, writeContractAsync } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash,
+    });
+
+  const sendCreateWalletTransaction = async (
+    form: UseFormReturn<
+      {
+        owners: string[];
+        requiredMinimumThreshold: number;
+        requiredInitialApprovals: number;
+        requiredInitialVotes: number;
+        name: string;
+      },
+      any,
+      undefined
+    >
+  ) => {
+    const {
+      owners,
+      requiredMinimumThreshold,
+      requiredInitialApprovals,
+      requiredInitialVotes,
+      name,
+    } = form.getValues();
+
+    const toEthereumAddressArray = (addresses: string[]): `0x${string}`[] => {
+      return addresses.map((address) => {
+        if (/^0x[a-fA-F0-9]{40}$/.test(address)) {
+          return address as `0x${string}`;
+        } else {
+          throw new Error(`Invalid Ethereum address: ${address}`);
+        }
+      });
+    };
+
+    const formattedOwners = toEthereumAddressArray(owners);
+
+    try {
+      await writeContractAsync({
+        address: "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+        abi,
+        functionName: "createMultiSigWalletAndHandler",
+        args: [
+          formattedOwners, // _owners
+          BigInt(requiredMinimumThreshold), // _requiredMinimumThreshold (example value)
+          BigInt(requiredInitialApprovals), // _requiredInitialApprovals (example value)
+          BigInt(requiredInitialVotes), // _requiredInitialVotes (example value)
+          name, // _name
+        ],
+      });
+    } catch (error) {
+      console.error("Error creating wallet:", error);
+    }
+  };
+
   const Container = ({ children }: { children: React.ReactNode }) => {
     return (
       <animated.div className="flex items-center justify-center flex-col px-8 py-8 gap-4 border-box">
@@ -93,7 +156,10 @@ export const WelcomeCreateAdd = () => {
   const CreateWallet = () => {
     return (
       <Container>
-        <CreateWalletForm setCurrentScreen={setCurrentScreen} />
+        <CreateWalletForm
+          setCurrentScreen={setCurrentScreen}
+          sendCreateWalletTransaction={sendCreateWalletTransaction}
+        />
         <Button
           variant={"outline"}
           className="flex gap-4"
