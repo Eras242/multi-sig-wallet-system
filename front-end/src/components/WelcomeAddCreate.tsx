@@ -13,7 +13,7 @@ import { useWaitForTransactionReceipt } from "wagmi";
 import { UseFormReturn } from "react-hook-form";
 
 import { useWriteContract } from "wagmi";
-import { abi } from "@/abi/MultiSigFactory";
+import { abi } from "@/abi/Box";
 
 export const WelcomeCreateAdd = () => {
   const { data: hash, isPending, writeContractAsync } = useWriteContract();
@@ -57,16 +57,17 @@ export const WelcomeCreateAdd = () => {
 
     try {
       await writeContractAsync({
-        address: "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+        address: "0x0116686E2291dbd5e317F47faDBFb43B599786Ef",
         abi,
-        functionName: "createMultiSigWalletAndHandler",
-        args: [
-          formattedOwners, // _owners
-          BigInt(requiredMinimumThreshold), // _requiredMinimumThreshold (example value)
-          BigInt(requiredInitialApprovals), // _requiredInitialApprovals (example value)
-          BigInt(requiredInitialVotes), // _requiredInitialVotes (example value)
-          name, // _name
-        ],
+        functionName: "setNumber",
+        args: [BigInt(1)],
+        // [
+        //   formattedOwners, // _owners
+        //   BigInt(requiredMinimumThreshold), // _requiredMinimumThreshold (example value)
+        //   BigInt(requiredInitialApprovals), // _requiredInitialApprovals (example value)
+        //   BigInt(requiredInitialVotes), // _requiredInitialVotes (example value)
+        //   name, // _name
+        // ],
       });
     } catch (error) {
       console.error("Error creating wallet:", error);
@@ -180,6 +181,10 @@ export const WelcomeCreateAdd = () => {
         <h2 className="font-bold text-2xl ">Deploying your new wallet:</h2>
         <Separator className="w-80" />
         <p>Sending Transaction ...</p>
+        <p>Pending: {JSON.stringify(isPending)}</p>
+        <p>Hash: {hash}</p>
+        <p>Confirming: {JSON.stringify(isConfirming)}</p>
+        <p>Confirmed: {JSON.stringify(isConfirmed)}</p>
         <Progress value={33} className=" h-2" />
       </Container>
     );
