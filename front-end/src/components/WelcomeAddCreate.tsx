@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTransition, animated } from "@react-spring/web";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { CreateWalletForm } from "./CreateWalletForm";
@@ -21,6 +21,15 @@ export const WelcomeCreateAdd = () => {
     useWaitForTransactionReceipt({
       hash,
     });
+
+  useEffect(() => {
+    if (isConfirmed) {
+      // set a delay so that an alert is shown after 2 seconds
+      setTimeout(() => {
+        alert("Transaction confirmed!");
+      }, 1000);
+    }
+  });
 
   const sendCreateWalletTransaction = async (
     form: UseFormReturn<
@@ -57,7 +66,7 @@ export const WelcomeCreateAdd = () => {
 
     try {
       await writeContractAsync({
-        address: "0x0116686E2291dbd5e317F47faDBFb43B599786Ef",
+        address: "0x0C59767bA47eFEfFEd4e219Ca0F8C4EeD2857B2D",
         abi,
         functionName: "setNumber",
         args: [BigInt(1)],
@@ -176,16 +185,36 @@ export const WelcomeCreateAdd = () => {
   const DeployingWallet = () => {
     const [percentage, setPercentage] = useState(0);
 
+    useEffect(() => {
+      console.log("isPending:", isPending);
+      console.log("isConfirming:", isConfirming);
+      console.log("isConfirmed:", isConfirmed);
+
+      if (isPending) {
+        setPercentage(0);
+      } else if (isConfirming) {
+        setPercentage(50);
+      } else if (isConfirmed) {
+        setPercentage(100);
+      }
+    }, [isPending, isConfirming, isConfirmed]);
+
     return (
       <Container>
         <h2 className="font-bold text-2xl ">Deploying your new wallet:</h2>
         <Separator className="w-80" />
-        <p>Sending Transaction ...</p>
-        <p>Pending: {JSON.stringify(isPending)}</p>
-        <p>Hash: {hash}</p>
-        <p>Confirming: {JSON.stringify(isConfirming)}</p>
-        <p>Confirmed: {JSON.stringify(isConfirmed)}</p>
-        <Progress value={33} className=" h-2" />
+        <p>
+          {isPending && "Awaiting transaction execution..."}
+          {isConfirming && "Awaiting transaction confirmation..."}
+          {isConfirmed && "Transaction confirmed!"}
+        </p>
+        <Progress value={percentage} className=" h-2 w-[500px] my-16" />
+        {hash && (
+          <div className="flex items-center space-x-2 text-xs border py-2 px-12 rounded">
+            <p>TX Hash: </p>
+            <span className="underline">0x1cd...a2ae</span>
+          </div>
+        )}
       </Container>
     );
   };
@@ -212,13 +241,7 @@ export const WelcomeCreateAdd = () => {
   });
 
   return (
-    // <div className=" flex h-full w-full overflow-hidden bg-green-300">
-    <div className="relative w-full h-full overflow-hidden self-center ">
-      {/* <animated.div
-        style={{ ...transitions }}
-        key={currentScreen}
-        className="bg-purple-300"
-      > */}
+    <div className="relative w-full  self-center">
       {transitions((style, item) => (
         <div className="absolute left-2/4 top-2/4 transform -translate-x-1/2 -translate-y-1/2 px-8 py-8 gap-4 border-box">
           <animated.div
@@ -229,9 +252,6 @@ export const WelcomeCreateAdd = () => {
           </animated.div>
         </div>
       ))}
-      {/* </animated.div> */}
-
-      {/* <p>Hello World</p> */}
     </div>
   );
 };

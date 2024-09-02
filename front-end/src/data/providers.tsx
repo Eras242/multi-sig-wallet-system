@@ -7,7 +7,15 @@ import {
   Theme,
 } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
-import { mainnet, polygon, optimism, arbitrum, base } from "wagmi/chains";
+import {
+  mainnet,
+  polygon,
+  optimism,
+  arbitrum,
+  base,
+  sepolia,
+  anvil,
+} from "wagmi/chains";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { metaMask } from "wagmi/connectors";
@@ -15,7 +23,7 @@ import { metaMask } from "wagmi/connectors";
 const config = getDefaultConfig({
   appName: "MultiSig Wallet System",
   projectId: "ab3a6d6178ba4065caad5b9f39927336",
-  chains: [mainnet, polygon, optimism, arbitrum, base],
+  chains: [mainnet, polygon, optimism, arbitrum, base, sepolia, anvil],
   ssr: true,
 });
 
