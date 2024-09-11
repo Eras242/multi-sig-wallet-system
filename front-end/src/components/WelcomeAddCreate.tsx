@@ -9,27 +9,57 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useWaitForTransactionReceipt } from "wagmi";
-
+import { useRouter, usePathname } from "next/navigation";
 import { UseFormReturn } from "react-hook-form";
-
 import { useWriteContract } from "wagmi";
 import { abi } from "@/abi/Box";
 
+const slugToScreen: { [key: string]: number } = {
+  welcome: 0,
+  "getting-started": 1,
+  "add-wallet": 2,
+  "create-wallet": 3,
+  deploying: 4,
+};
+
 export const WelcomeCreateAdd = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+
   const { data: hash, isPending, writeContractAsync } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({
-      hash,
-    });
+  const {
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+    data: receipt,
+  } = useWaitForTransactionReceipt({
+    hash,
+  });
 
   useEffect(() => {
+    console.log("Transaction status:", {
+      isPending,
+      isConfirming,
+      isConfirmed,
+    });
+    console.log("Transaction hash:", hash);
+    console.log("Transaction receipt:", receipt);
+
     if (isConfirmed) {
-      // set a delay so that an alert is shown after 2 seconds
+      console.log("Transaction confirmed!");
+      handleScreenChange(4); // Move to the "deploying" screen
       setTimeout(() => {
         alert("Transaction confirmed!");
       }, 1000);
     }
-  });
+  }, [isPending, isConfirming, isConfirmed, hash, receipt]);
+
+  useEffect(() => {
+    const slug = pathname.split("/")[1]; // Get the slug from the URL (default to 'welcome')
+    const screenIndex = slugToScreen[slug]; // Get the screen index
+    if (screenIndex !== undefined) {
+      setCurrentScreen(screenIndex);
+    }
+  }, [pathname]);
 
   const sendCreateWalletTransaction = async (
     form: UseFormReturn<
@@ -105,7 +135,7 @@ export const WelcomeCreateAdd = () => {
           </h2>
         </div>
         <Button
-          onClick={() => setCurrentScreen(1)}
+          onClick={() => handleScreenChange(1)}
           variant={"outline"}
           className="w-[250px] h-[50px] mt-4 "
         >
@@ -123,14 +153,14 @@ export const WelcomeCreateAdd = () => {
         <Separator className="w-80" />
         <div className="flex gap-4">
           <Button
-            onClick={() => setCurrentScreen(2)}
+            onClick={() => handleScreenChange(2)}
             variant={"outline"}
             className="w-[250px] h-[100px]"
           >
             <p>Add an existing wallet</p>
           </Button>
           <Button
-            onClick={() => setCurrentScreen(3)}
+            onClick={() => handleScreenChange(3)}
             variant={"outline"}
             className="w-[250px] h-[100px] "
           >
@@ -152,7 +182,7 @@ export const WelcomeCreateAdd = () => {
           <Button
             variant={"outline"}
             className="flex gap-4"
-            onClick={() => setCurrentScreen(1)}
+            onClick={() => handleScreenChange(1)}
           >
             {" "}
             <ArrowLeftOutlined />
@@ -173,7 +203,7 @@ export const WelcomeCreateAdd = () => {
         <Button
           variant={"outline"}
           className="flex gap-4"
-          onClick={() => setCurrentScreen(1)}
+          onClick={() => handleScreenChange(1)}
         >
           <ArrowLeftOutlined />
           Back
@@ -186,10 +216,6 @@ export const WelcomeCreateAdd = () => {
     const [percentage, setPercentage] = useState(0);
 
     useEffect(() => {
-      console.log("isPending:", isPending);
-      console.log("isConfirming:", isConfirming);
-      console.log("isConfirmed:", isConfirmed);
-
       if (isPending) {
         setPercentage(0);
       } else if (isConfirming) {
@@ -204,7 +230,7 @@ export const WelcomeCreateAdd = () => {
         <h2 className="font-bold text-2xl ">Deploying your new wallet:</h2>
         <Separator className="w-80" />
         <p>
-          {isPending && "Awaiting transaction execution..."}
+          {isPending && "Please confirm the transaction..."}
           {isConfirming && "Awaiting transaction confirmation..."}
           {isConfirmed && "Transaction confirmed!"}
         </p>
@@ -221,12 +247,33 @@ export const WelcomeCreateAdd = () => {
 
   const [currentScreen, setCurrentScreen] = useState(0);
 
+  const handleScreenChange = (id: number) => {
+    const slug = screens.find((screen) => screen.id === id)?.name;
+    if (slug) {
+      setCurrentScreen(id);
+
+      router.push(`/${slug}`);
+    }
+  };
+
   const screens = [
-    { id: 0, component: <Welcome key="welcome" /> },
-    { id: 1, component: <GetStarted key="getStarted" /> },
-    { id: 2, component: <AddWallet key="addWallet" /> },
-    { id: 3, component: <CreateWallet key="createWallet" /> },
-    { id: 4, component: <DeployingWallet key="deployingWallet" /> },
+    { id: 0, name: "welcome", component: <Welcome key="welcome" /> },
+    {
+      id: 1,
+      name: "getting-started",
+      component: <GetStarted key="getStarted" />,
+    },
+    { id: 2, name: "add-wallet", component: <AddWallet key="addWallet" /> },
+    {
+      id: 3,
+      name: "create-wallet",
+      component: <CreateWallet key="createWallet" />,
+    },
+    {
+      id: 4,
+      name: "deploying",
+      component: <DeployingWallet key="deployingWallet" />,
+    },
   ];
 
   // If -1 from current screen?
@@ -241,9 +288,9 @@ export const WelcomeCreateAdd = () => {
   });
 
   return (
-    <div className="relative w-full  self-center">
+    <>
       {transitions((style, item) => (
-        <div className="absolute left-2/4 top-2/4 transform -translate-x-1/2 -translate-y-1/2 px-8 py-8 gap-4 border-box">
+        <div className=" absolute left-2/4 top-2/4 transform -translate-x-1/2 -translate-y-1/2 overflow-hidden w-full px-8 py-8 gap-4 border-box">
           <animated.div
             style={style}
             className="flex items-center justify-center"
@@ -252,6 +299,6 @@ export const WelcomeCreateAdd = () => {
           </animated.div>
         </div>
       ))}
-    </div>
+    </>
   );
 };

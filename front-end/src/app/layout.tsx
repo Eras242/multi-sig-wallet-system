@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/Sidebar"; // Import the Sidebar component
+import { WagmiConnectionProvider } from "@/data/providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,12 +19,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="flex h-screen">
-          <Sidebar /> {/* Sidebar is always displayed */}
-          <div className="flex-1">
-            {children} {/* Page content */}
+        <WagmiConnectionProvider>
+          <div className="flex h-screen">
+            <Sidebar />
+            <div className="relative flex-1 overflow-hidden h-full w-ful">
+              {children} {/* Page content */}
+            </div>
           </div>
-        </div>
+        </WagmiConnectionProvider>
       </body>
     </html>
   );

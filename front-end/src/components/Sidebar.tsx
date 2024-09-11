@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 export const Sidebar = () => {
   return (
-    <div className=" hidden w-64 flex-col border-r bg-background md:flex">
+    <div className=" hidden w-64 flex-col border-r bg-background md:flex z-10">
       <nav
         className="flex flex-col flex-1 space-y-2 px-4 py-6
   "
