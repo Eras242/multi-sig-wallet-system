@@ -25,10 +25,11 @@ import { Separator } from "./ui/separator";
 import { Button } from "@/components/ui/button";
 
 export const CreateWalletDialog = ({
+  handleScreenChange,
   sendCreateWalletTransaction,
-  setCurrentScreen,
   form,
 }: {
+  handleScreenChange: (id: number) => void;
   sendCreateWalletTransaction: (
     form: UseFormReturn<
       {
@@ -42,7 +43,6 @@ export const CreateWalletDialog = ({
       undefined
     >
   ) => Promise<void>;
-  setCurrentScreen: React.Dispatch<React.SetStateAction<number>>;
   form: UseFormReturn<
     {
       owners: string[];
@@ -216,8 +216,8 @@ export const CreateWalletDialog = ({
                 <DialogClose asChild>
                   <Button
                     onClick={() => {
-                      setCurrentScreen(4);
                       sendCreateWalletTransaction(form);
+                      handleScreenChange(4);
                     }}
                   >
                     Create Wallet

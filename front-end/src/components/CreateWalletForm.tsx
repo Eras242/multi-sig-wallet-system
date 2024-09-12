@@ -119,10 +119,10 @@ const formSchema = z
 type FormData = z.infer<typeof formSchema>;
 
 export function CreateWalletForm({
-  setCurrentScreen,
+  handleScreenChange,
   sendCreateWalletTransaction,
 }: {
-  setCurrentScreen: React.Dispatch<React.SetStateAction<number>>;
+  handleScreenChange: (id: number) => void;
   sendCreateWalletTransaction: (
     form: UseFormReturn<
       {
@@ -372,7 +372,7 @@ export function CreateWalletForm({
         </div>
         {isConnected ? (
           <CreateWalletDialog
-            setCurrentScreen={setCurrentScreen}
+            handleScreenChange={handleScreenChange}
             form={form}
             sendCreateWalletTransaction={sendCreateWalletTransaction}
           />

@@ -23,6 +23,12 @@ const config = getDefaultConfig({
   appName: "MultiSig Wallet System",
   projectId: "ab3a6d6178ba4065caad5b9f39927336",
   chains: [mainnet, polygon, optimism, arbitrum, base, sepolia, anvil],
+  transports: {
+    [sepolia.id]: http(
+      "https://sepolia.infura.io/v3/62dc490feac442098dcb4fc1ecaa2dc0"
+    ),
+  },
+
   ssr: true,
 });
 

@@ -2,6 +2,7 @@ import React from "react";
 
 import { EditOutlined } from "@ant-design/icons";
 import { ConnectWallet } from "@/components/ConnectWallet";
+import { Copy } from "lucide-react";
 
 import Image from "next/image";
 import {
@@ -34,13 +35,23 @@ import { Transactions } from "@/components/Transactions";
 export const Wallet = () => {
   return (
     <div className=" flex flex-1 flex-col px-8 py-8 gap-4">
-      <div className="flex items-center h-12  gap-4">
+      <div className="flex items-center h-12  gap-4 mb-8">
         <h1 className="font-bold text-4xl ">DAO Wallet 1 </h1>
+        <Card className="px-4 py-2">
+          <p className="muted flex gap-2 text-sm">
+            0x0C59...7B2D{" "}
+            <span className="flex items-center justify-center">
+              {<Copy size={16} />}
+            </span>
+          </p>
+        </Card>
 
         {/* <Button variant="outline" className="ml-auto">
         Connect Wallet
       </Button> */}
-        <ConnectWallet />
+        <div className="ml-auto">
+          <ConnectWallet />
+        </div>
         <Switch />
         <p>Light</p>
       </div>
