@@ -27,7 +27,7 @@ import { Badge } from "@/components/ui/badge";
 
 export const Transactions = () => {
   return (
-    <Tabs defaultValue="account">
+    <Tabs defaultValue="all" className="h-full w-2/4">
       <TabsList className="flex justify-between">
         <TabsTrigger value="all">All</TabsTrigger>
         <TabsTrigger value="pending">Pending</TabsTrigger>

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/Sidebar"; // Import the Sidebar component
 import { WagmiConnectionProvider } from "@/data/providers";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,6 +23,7 @@ export default function RootLayout({
         <WagmiConnectionProvider>
           <div className="flex h-screen">
             <Sidebar />
+            <Toaster />
             <div className="relative flex-1 overflow-hidden h-full w-ful">
               {children} {/* Page content */}
             </div>

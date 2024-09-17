@@ -2,10 +2,9 @@
 import { useEffect, useState } from "react";
 import { useTransition, animated } from "@react-spring/web";
 import React from "react";
-import { useWaitForTransactionReceipt } from "wagmi";
 import { useRouter, usePathname } from "next/navigation";
 import { UseFormReturn } from "react-hook-form";
-import { useWriteContract } from "wagmi";
+import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { abi } from "@/abi/Box";
 import Welcome from "./screens/Welcome";
 import GetStarted from "./screens/GetStarted";
@@ -13,19 +12,16 @@ import AddWallet from "./screens/AddWallet";
 import CreateWallet from "./screens/CreateWallet";
 import DeployingWallet from "./screens/DeployingWallet";
 
-const slugToScreen: { [key: string]: number } = {
-  welcome: 0,
-  "getting-started": 1,
-  "add-wallet": 2,
-  "create-wallet": 3,
-  deploying: 4,
-};
-
 export const WelcomeCreateAdd = () => {
   const router = useRouter();
   const pathname = usePathname();
 
-  const { data: hash, isPending, writeContractAsync } = useWriteContract();
+  const {
+    data: hash,
+    error,
+    isPending,
+    writeContractAsync,
+  } = useWriteContract();
 
   const {
     isLoading: isConfirming,
@@ -37,13 +33,13 @@ export const WelcomeCreateAdd = () => {
 
   const [currentScreen, setCurrentScreen] = useState(0);
 
-  useEffect(() => {
-    const slug = pathname.split("/")[1]; // Get the slug from the URL (default to 'welcome')
-    const screenIndex = slugToScreen[slug]; // Get the screen index
-    if (screenIndex !== undefined) {
-      setCurrentScreen(screenIndex);
-    }
-  }, [pathname]);
+  // useEffect(() => {
+  //   const slug = pathname.split("/")[1]; // Get the slug from the URL (default to 'welcome')
+  //   const screenIndex = slugToScreen[slug]; // Get the screen index
+  //   if (screenIndex !== undefined) {
+  //     setCurrentScreen(screenIndex);
+  //   }
+  // }, [pathname]);
 
   const sendCreateWalletTransaction = async (
     form: UseFormReturn<
@@ -102,12 +98,12 @@ export const WelcomeCreateAdd = () => {
   }, [hash]);
 
   const handleScreenChange = (id: number) => {
-    const slug = screens.find((screen) => screen.id === id)?.name;
-    if (slug) {
-      setCurrentScreen(id);
+    setCurrentScreen(id);
+    // const slug = screens.find((screen) => screen.id === id)?.name;
+    // if (slug) {
 
-      router.push(`/${slug}`);
-    }
+    //   router.push(`/${slug}`);
+    // }
   };
 
   const screens = [
@@ -149,6 +145,7 @@ export const WelcomeCreateAdd = () => {
       component: (
         <DeployingWallet
           hash={hash}
+          error={error}
           isPending={isPending}
           isConfirming={isConfirming}
           isConfirmed={isConfirmed}
